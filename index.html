@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<title>Realty CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#F8F7F4;--bg2:#FFFFFF;--bg3:#F2F0EC;--bg4:#EAE7E0;--bg5:#E0DDD4;
+  --gold:#9A7B3A;--gold2:#7A5F28;--gold-lt:#F5EDD8;--gold-border:#D4B87A;
+  --text:#1A1814;--text2:#5A5550;--text3:#9A9490;--text4:#C0BBB5;
+  --border:#E8E4DC;--border2:#D8D3C8;
+  --accent:#2D5A8E;--accent-lt:#EBF0F8;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;}
+
+.app{display:flex;height:100dvh;width:100vw;overflow:hidden;position:relative;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:100%;max-width:300px;background:var(--bg2);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden;flex-shrink:0;transition:transform .25s ease;
+}
+.sidebar-top{padding:16px 14px 0;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.brand-mark{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.brand-mark svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--gold2);letter-spacing:.2px;}
+.brand-sub{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+
+.search{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;margin-bottom:10px;}
+.search svg{width:14px;height:14px;stroke:var(--text3);fill:none;stroke-width:2;flex-shrink:0;}
+.search input{background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;width:100%;}
+.search input::placeholder{color:var(--text3);}
+
+.sbtn-row{display:flex;gap:7px;margin-bottom:12px;}
+.sbtn{flex:1;padding:8px;border-radius:7px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;transition:all .15s;letter-spacing:.2px;}
+.sbtn-gold{background:var(--gold);color:#fff;}
+.sbtn-gold:hover{background:var(--gold2);}
+.sbtn-outline{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}
+.sbtn-outline:hover{background:var(--bg4);}
+
+.filter-row{display:flex;gap:5px;padding:8px 14px;overflow-x:auto;border-bottom:1px solid var(--border);border-top:1px solid var(--border);}
+.filter-row::-webkit-scrollbar{display:none;}
+.fpill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;border:1px solid var(--border2);background:var(--bg2);color:var(--text3);}
+.fpill.on{background:var(--gold);color:#fff;border-color:var(--gold);}
+
+.clist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.citem{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;position:relative;transition:background .1s;}
+.citem:hover{background:var(--bg3);}
+.citem.sel{background:var(--gold-lt);border-left:3px solid var(--gold);}
+.citem-name{font-weight:600;font-size:13.5px;margin-bottom:2px;color:var(--text);}
+.citem-sub{font-size:11.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;}
+.citem-chips{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;}
+.chip{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;}
+.citem-time{position:absolute;top:12px;right:12px;font-size:10px;color:var(--text4);}
+.cbadge{position:absolute;bottom:11px;right:12px;background:var(--gold);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:2px 6px;}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg);}
+
+@media(max-width:640px){
+  .sidebar{position:absolute;z-index:10;height:100%;transform:translateX(0);}
+  .sidebar.hidden{transform:translateX(-100%);}
+  .main{width:100%;}
+}
+
+/* chat header */
+.chat-hdr{padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px;}
+.chat-hdr-l{display:flex;align-items:center;gap:10px;min-width:0;}
+.back-btn{font-size:22px;color:var(--gold);cursor:pointer;padding:2px 8px 2px 0;display:none;line-height:1;font-weight:300;}
+@media(max-width:640px){.back-btn{display:block;}}
+.ava{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--gold-lt);border:1.5px solid var(--gold-border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:700;color:var(--gold2);flex-shrink:0;
+}
+.hdr-info{min-width:0;}
+.hdr-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.hdr-sub{font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hdr-chips{display:flex;gap:5px;flex-wrap:nowrap;overflow:hidden;}
+.hdr-btns{display:flex;gap:6px;flex-shrink:0;}
+.ibtn{
+  width:34px;height:34px;border-radius:8px;border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text2);cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;
+  transition:background .15s;
+}
+.ibtn:hover{background:var(--bg4);}
+.ibadge{position:absolute;top:-4px;right:-4px;background:var(--gold);color:#fff;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+
+/* chat body */
+.chat-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 14px;display:flex;flex-direction:column;gap:10px;}
+
+/* date divider */
+.date-div{display:flex;align-items:center;gap:10px;margin:4px 0;}
+.date-div::before,.date-div::after{content:'';flex:1;height:1px;background:var(--border);}
+.date-div span{font-size:10px;color:var(--text3);white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;}
+
+/* message wrappers */
+.mw{display:flex;flex-direction:column;max-width:100%;}
+.mw.out{align-items:flex-end;}
+.mw.in{align-items:flex-start;}
+.mlabel{font-size:10px;color:var(--text3);margin-bottom:3px;padding:0 3px;letter-spacing:.3px;text-transform:uppercase;}
+.mtime{font-size:10px;color:var(--text4);margin-top:3px;padding:0 3px;}
+
+/* bubbles */
+.bubble{padding:9px 13px;border-radius:12px;font-size:14px;line-height:1.55;max-width:78%;word-break:break-word;}
+.bubble.note{
+  background:var(--gold);color:#fff;
+  border-radius:12px 2px 12px 12px;
+}
+.bubble.question{
+  background:var(--accent);color:#fff;
+  border-radius:12px 2px 12px 12px;
+}
+.bubble.ai{
+  background:var(--bg2);color:var(--text);
+  border-radius:2px 12px 12px 12px;
+  border:1px solid var(--border2);max-width:85%;
+}
+.ai-tag{font-size:10px;color:var(--gold);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;font-weight:600;}
+.bubble.form-card{
+  background:var(--bg2);border:1px solid var(--gold-border);
+  border-radius:2px 12px 12px 12px;max-width:90%;padding:14px;
+}
+.form-card-hd{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--gold2);margin-bottom:10px;font-weight:700;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 16px;}
+.ff-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;}
+.ff-val{font-size:13px;color:var(--text);font-weight:500;}
+.ff-full{grid-column:1/-1;}
+.bubble.rem-bubble{
+  background:var(--bg2);border:1px solid var(--gold-border);border-left:3px solid var(--gold);
+  border-radius:12px 2px 12px 12px;max-width:85%;padding:12px 14px;
+}
+.rem-hd{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.rem-title{font-weight:600;font-size:14px;color:var(--gold2);}
+.rem-due{font-size:12px;color:var(--text2);margin-bottom:4px;}
+.rem-note{font-size:13px;color:var(--text);}
+.rem-actions{display:flex;gap:7px;margin-top:9px;}
+.rem-btn{padding:5px 13px;border-radius:6px;border:1px solid var(--border2);background:none;color:var(--text2);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.rem-btn:hover{background:var(--bg3);}
+.rem-btn.done-btn{background:#EAF5EE;color:#2D6A4F;border-color:#A8D5B8;}
+
+/* typing */
+.typing{display:flex;gap:4px;align-items:center;padding:10px 13px;background:var(--bg2);border:1px solid var(--border2);border-radius:2px 12px 12px 12px;width:fit-content;}
+.tdot{width:5px;height:5px;background:var(--text3);border-radius:50%;animation:td 1.2s infinite;}
+.tdot:nth-child(2){animation-delay:.2s;}
+.tdot:nth-child(3){animation-delay:.4s;}
+@keyframes td{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* ── INPUT ── */
+.input-area{padding:10px 14px;padding-bottom:calc(10px + var(--safe-bottom));background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;}
+.mode-row{display:flex;gap:6px;margin-bottom:8px;}
+.mtab{padding:5px 14px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;}
+.mtab.on{background:var(--gold);color:#fff;border-color:var(--gold);}
+.irow{display:flex;gap:8px;align-items:flex-end;}
+.ibox{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;resize:none;outline:none;min-height:44px;max-height:100px;line-height:1.5;transition:border-color .15s;}
+.ibox:focus{border-color:var(--gold);}
+.ibox::placeholder{color:var(--text3);}
+.send{width:44px;height:44px;border-radius:10px;border:none;flex-shrink:0;background:var(--gold);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.send:hover{background:var(--gold2);}
+.send svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+.hint{font-size:11px;color:var(--text3);margin-top:6px;}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fIn .15s ease;}
+@media(min-width:641px){.overlay{align-items:center;}}
+@keyframes fIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:sUp .22s ease;padding-bottom:env(safe-area-inset-bottom,0);}
+@media(min-width:641px){.modal{border-radius:14px;width:560px;max-width:95vw;max-height:88dvh;}}
+@keyframes sUp{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mhdr{padding:18px 18px 0;display:flex;justify-content:space-between;align-items:center;}
+.mtitle{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--text);font-weight:700;}
+.mclose{width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;line-height:1;}
+.mbody{padding:16px 18px 22px;}
+
+.fsec{margin-bottom:16px;}
+.fsec-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:10px;font-weight:600;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.frow.one{grid-template-columns:1fr;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.flabel{font-size:11px;color:var(--text2);font-weight:500;}
+.finput{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%;transition:border-color .15s;}
+.finput:focus{border-color:var(--gold);}
+.finput::placeholder{color:var(--text3);}
+select.finput{cursor:pointer;}
+.factions{display:flex;gap:9px;justify-content:flex-end;margin-top:16px;}
+.fbtn{padding:9px 20px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.fbtn-gold{background:var(--gold);color:#fff;}
+.fbtn-gold:hover{background:var(--gold2);}
+.fbtn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}
+.fbtn-ghost:hover{background:var(--bg4);}
+
+.srow{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px;}
+.stag{padding:6px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;border:1px solid transparent;transition:all .15s;}
+
+.rem-list{display:flex;flex-direction:column;gap:9px;margin-bottom:14px;}
+.rem-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.rem-item.faded{opacity:.45;}
+
+/* empty */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text3);padding:30px;}
+.empty-icon{width:52px;height:52px;opacity:.2;}
+.empty h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--text2);font-weight:600;}
+.empty p{font-size:13px;text-align:center;line-height:1.7;max-width:260px;}
+
+/* toast */
+.toast{position:fixed;bottom:calc(80px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:999;white-space:nowrap;animation:sUp .2s ease;font-weight:500;}
+
+/* loading bar */
+.lbar{height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);background-size:200px 100%;animation:lb 1.4s infinite;flex-shrink:0;}
+@keyframes lb{from{background-position:-200px 0}to{background-position:calc(100% + 200px) 0}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div>
+          <div class="brand-name">Realty CRM</div>
+          <div class="brand-sub">Guanacaste · GMA</div>
+        </div>
+      </div>
+      <div class="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="searchInput" placeholder="Search clients…" oninput="filterClients()"/>
+      </div>
+      <div class="sbtn-row">
+        <button class="sbtn sbtn-gold" onclick="openModal('addClient')">+ New Client</button>
+        <button class="sbtn sbtn-outline" onclick="openModal('intake')">Intake Form</button>
+      </div>
+    </div>
+    <div class="filter-row" id="filterRow"></div>
+    <div class="clist" id="clientList"></div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="empty" id="emptyState">
+      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <h3>Select a client</h3>
+      <p>Choose a client from the list or create a new one to open their conversation.</p>
+    </div>
+
+    <div id="chatView" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+      <div class="chat-hdr">
+        <div class="chat-hdr-l">
+          <span class="back-btn" onclick="goBack()">‹</span>
+          <div class="ava" id="hdrAva"></div>
+          <div class="hdr-info">
+            <div class="hdr-name" id="hdrName"></div>
+            <div class="hdr-sub" id="hdrSub"></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          <div class="hdr-chips" id="hdrChips"></div>
+          <div class="hdr-btns">
+            <button class="ibtn" id="remBtn" onclick="openModal('reminders')" title="Reminders">⏰</button>
+            <button class="ibtn" onclick="openModal('labels')" title="Labels">🏷</button>
+          </div>
+        </div>
+      </div>
+      <div id="lbar" class="lbar" style="display:none;"></div>
+      <div class="chat-body" id="chatBody"></div>
+      <div class="input-area">
+        <div class="mode-row">
+          <button class="mtab on" id="tabNote" onclick="setMode('note')">Note</button>
+          <button class="mtab" id="tabAsk" onclick="setMode('ask')">Ask AI</button>
+        </div>
+        <div class="irow">
+          <textarea class="ibox" id="msgInput" rows="1"
+            placeholder="Write a note… or &quot;remind me to call Scott at 9am Saturday&quot;"
+            oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+          <button class="send" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+        <div class="hint" id="inputHint">Tip: type "remind me to…" and a reminder card will be created automatically.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="modalOverlay" class="overlay" style="display:none;" onclick="overlayClick(event)">
+  <div class="modal" id="modalBox"></div>
+</div>
+<div id="toast" class="toast" style="display:none;"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const NOW = Date.now();
+const D = m => new Date(NOW - m*60000).toISOString();
+
+const TYPE_COLORS = {
+  "Buyer":             {bg:"#E8F5EE",text:"#1A5C38",border:"#A8D5B8"},
+  "Seller":            {bg:"#E8F0F8",text:"#1A3C6A",border:"#A8C0D8"},
+  "Renter":            {bg:"#F5EDE8",text:"#6A2A1A",border:"#D5B8A8"},
+  "Landlord":          {bg:"#F0EAF5",text:"#4A1A6A",border:"#C0A8D8"},
+  "Relocation Client": {bg:"#EAF5F5",text:"#1A5A5A",border:"#A8D5D5"},
+  "Business Provider": {bg:"#F5F0E8",text:"#5A4A1A",border:"#D8C8A0"},
+};
+const STATUS_COLORS = {
+  "New Lead":    {bg:"#FFF8E8",text:"#7A5A10",border:"#E8D090"},
+  "In Progress": {bg:"#EAF5EB",text:"#1A5A2A",border:"#A0D0A8"},
+  "On Hold":     {bg:"#F2F2F2",text:"#505050",border:"#C8C8C8"},
+  "Closed":      {bg:"#E8F0F8",text:"#1A3A6A",border:"#A8C0D8"},
+  "Lost":        {bg:"#F8EAEA",text:"#6A1A1A",border:"#D8A8A8"},
+};
+const CLIENT_TYPES = ["Buyer","Seller","Renter","Landlord","Relocation Client","Business Provider"];
+const CLIENT_STATUSES = ["New Lead","In Progress","On Hold","Closed","Lost"];
+
+let clients = [
+  {id:"c1",fullName:"Scott Mitchell",email:"scott.mitchell@gmail.com",phone:"+1 305 844 2201",budget:"$450,000–$600,000",propertyType:"House",preferredLocation:"Tamarindo, Guanacaste",bedrooms:"3",bathrooms:"2.5",lotSize:"600 m²",constructionSize:"280 m²",parking:"2",amenities:"Pool, Ocean view, Gated community",otherFeatures:"Home office, Solar panels",clientType:"Buyer",status:"In Progress",createdAt:D(2880)},
+  {id:"c2",fullName:"María Fernández",email:"mariaf@outlook.com",phone:"+506 8812 3456",budget:"$180,000",propertyType:"Apartment",preferredLocation:"Liberia, Guanacaste",bedrooms:"2",bathrooms:"1",lotSize:"—",constructionSize:"90 m²",parking:"1",amenities:"Gym, Security",otherFeatures:"Near schools",clientType:"Renter",status:"New Lead",createdAt:D(720)},
+  {id:"c3",fullName:"James & Priya Holloway",email:"jholloway@icloud.com",phone:"+1 415 222 9900",budget:"$1,200,000",propertyType:"Luxury Villa",preferredLocation:"Playa Flamingo",bedrooms:"5",bathrooms:"4",lotSize:"2000 m²",constructionSize:"600 m²",parking:"3",amenities:"Infinity pool, Staff quarters, Private road",otherFeatures:"Ocean front, Smart home",clientType:"Relocation Client",status:"In Progress",createdAt:D(10080)},
+  {id:"c4",fullName:"Roberto Vega Solano",email:"rvega@negocios.cr",phone:"+506 7700 1122",budget:"$320,000",propertyType:"Commercial",preferredLocation:"Liberia Centro",bedrooms:"—",bathrooms:"2",lotSize:"400 m²",constructionSize:"250 m²",parking:"5",amenities:"Warehouse space, Loading dock",otherFeatures:"Corner lot, High visibility",clientType:"Business Provider",status:"On Hold",createdAt:D(4320)},
+  {id:"c5",fullName:"Anika Larsson",email:"anika.l@gmail.com",phone:"+46 70 123 4567",budget:"€220,000",propertyType:"Condo",preferredLocation:"Tamarindo or Nosara",bedrooms:"2",bathrooms:"2",lotSize:"—",constructionSize:"110 m²",parking:"1",amenities:"Pool, Beachfront complex",otherFeatures:"Rental income potential",clientType:"Buyer",status:"New Lead",createdAt:D(180)},
+];
+
+let messages = {
+  c1:[
+    {id:"m1",clientId:"c1",type:"form",content:"c1",timestamp:D(2880),sender:"System"},
+    {id:"m2",clientId:"c1",type:"note",content:"Scott called — very motivated, wants to visit Tamarindo next month. His wife prefers something with a view. Has a pre-approval letter from his bank.",timestamp:D(2100),sender:"You"},
+    {id:"m3",clientId:"c1",type:"question",content:"Has Scott provided a budget and a flight date?",timestamp:D(1440),sender:"You"},
+    {id:"m4",clientId:"c1",type:"ai",content:"Yes — Scott's budget is $450,000–$600,000 and he has a bank pre-approval letter. For flight date, he hasn't confirmed exact dates yet, only that he plans to visit Tamarindo next month.",timestamp:D(1439),sender:"AI Assistant"},
+    {id:"m5",clientId:"c1",type:"note",content:"Sent him 3 property listings in Tamarindo Hills. Awaiting response.",timestamp:D(720),sender:"You"},
+    {id:"m6",clientId:"c1",type:"reminder",content:"r1",timestamp:D(60),sender:"You"},
+  ],
+  c2:[
+    {id:"m10",clientId:"c2",type:"note",content:"María found us through Instagram. Looking for a long-term rental in Liberia, ideally near Escuela República Argentina.",timestamp:D(700),sender:"You"},
+    {id:"m11",clientId:"c2",type:"reminder",content:"r2",timestamp:D(600),sender:"You"},
+  ],
+  c3:[
+    {id:"m20",clientId:"c3",type:"form",content:"c3",timestamp:D(10080),sender:"System"},
+    {id:"m21",clientId:"c3",type:"note",content:"James is a tech exec relocating from San Francisco. Priya is a yoga instructor — wants space for a studio. Budget is flexible upward if the right property comes up.",timestamp:D(8640),sender:"You"},
+    {id:"m22",clientId:"c3",type:"question",content:"What are their must-haves vs nice-to-haves?",timestamp:D(4320),sender:"You"},
+    {id:"m23",clientId:"c3",type:"ai",content:"Must-haves: Ocean front, 5 bedrooms, 4 bathrooms, smart home features, private road access. Nice-to-haves: Staff quarters, infinity pool. Priya specifically wants space for a yoga studio — implied from the notes but not on the form.",timestamp:D(4319),sender:"AI Assistant"},
+  ],
+  c4:[
+    {id:"m30",clientId:"c4",type:"note",content:"Roberto is looking for commercial space to expand his distribución business. On hold — waiting for a business partner decision.",timestamp:D(4300),sender:"You"},
+    {id:"m31",clientId:"c4",type:"reminder",content:"r3",timestamp:D(3000),sender:"You"},
+  ],
+  c5:[
+    {id:"m40",clientId:"c5",type:"note",content:"Anika is Swedish, found us through a relocation blog. Interested in investment properties with rental income potential. Speaks excellent English.",timestamp:D(170),sender:"You"},
+  ],
+};
+
+let reminders = {
+  r1:{id:"r1",clientId:"c1",title:"Call Scott",dueDate:"Saturday",dueTime:"9:00 AM",note:"Check if he reviewed the Tamarindo Hills listings",done:false},
+  r2:{id:"r2",clientId:"c2",title:"Send rental options to María",dueDate:"Monday",dueTime:"10:00 AM",note:"Focus on Liberia centro, 2BR, under ₡180k/month",done:false},
+  r3:{id:"r3",clientId:"c4",title:"Follow up with Roberto",dueDate:"Last Wednesday",dueTime:"3:00 PM",note:"Ask about partner decision status",done:true},
+};
+
+let selectedClientId = null;
+let inputMode = "note";
+let currentFilter = "All";
+let isLoading = false;
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const ini = n => (n||"?").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+const fTime = ts => ts ? new Date(ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}) : "";
+const fRel = ts => {
+  if(!ts) return "";
+  const m = Math.floor((Date.now()-new Date(ts))/60000);
+  if(m<1) return "now"; if(m<60) return m+"m"; if(m<1440) return Math.floor(m/60)+"h";
+  const d = Math.floor(m/1440); if(d<7) return d+"d";
+  return new Date(ts).toLocaleDateString([],{month:"short",day:"numeric"});
+};
+const fDate = ts => {
+  if(!ts) return "";
+  const d=new Date(ts), now=new Date(), diff=Math.floor((now-d)/86400000);
+  if(diff===0) return "Today"; if(diff===1) return "Yesterday";
+  if(diff<7) return d.toLocaleDateString([],{weekday:"long"});
+  return d.toLocaleDateString([],{month:"short",day:"numeric"});
+};
+const chipStyle = (label, map) => {
+  const c = map[label];
+  return c ? `background:${c.bg};color:${c.text};border:1px solid ${c.border}` : "background:#F0F0F0;color:#606060;border:1px solid #D0D0D0";
+};
+const esc = s => (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.onload = () => { buildFilters(); renderClientList(); };
+
+function buildFilters() {
+  const row = document.getElementById("filterRow");
+  const all = ["All",...CLIENT_TYPES,...CLIENT_STATUSES];
+  row.innerHTML = all.map(f=>`<button class="fpill${f===currentFilter?" on":""}" onclick="setFilter('${f}')">${f}</button>`).join("");
+}
+function setFilter(f) { currentFilter=f; buildFilters(); renderClientList(); }
+function filterClients() { renderClientList(); }
+
+function renderClientList() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  const list = document.getElementById("clientList");
+  const filtered = clients.filter(c=>{
+    const ms = !q || c.fullName.toLowerCase().includes(q) || (c.email||"").toLowerCase().includes(q);
+    const mf = currentFilter==="All" || c.clientType===currentFilter || c.status===currentFilter;
+    return ms && mf;
+  });
+  list.innerHTML = filtered.map(c=>{
+    const pr = Object.values(reminders).filter(r=>r.clientId===c.id&&!r.done).length;
+    return `<div class="citem${c.id===selectedClientId?" sel":""}" onclick="selectClient('${c.id}')">
+      <div class="citem-name">${esc(c.fullName)}</div>
+      <div class="citem-sub">${esc(c.email||c.phone||"—")}</div>
+      <div class="citem-chips">
+        ${c.clientType?`<span class="chip" style="${chipStyle(c.clientType,TYPE_COLORS)}">${c.clientType}</span>`:""}
+        ${c.status?`<span class="chip" style="${chipStyle(c.status,STATUS_COLORS)}">${c.status}</span>`:""}
+      </div>
+      <div class="citem-time">${fRel(c.createdAt)}</div>
+      ${pr>0?`<div class="cbadge">⏰ ${pr}</div>`:""}
+    </div>`;
+  }).join("") || `<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">No clients found.</div>`;
+}
+
+// ── SELECT CLIENT ─────────────────────────────────────────────────────────────
+function selectClient(id) {
+  selectedClientId = id;
+  const c = clients.find(x=>x.id===id);
+  if(!c) return;
+  if(window.innerWidth<=640) document.getElementById("sidebar").classList.add("hidden");
+  document.getElementById("emptyState").style.display="none";
+  const cv = document.getElementById("chatView");
+  cv.style.display="flex";
+  document.getElementById("hdrAva").textContent = ini(c.fullName);
+  document.getElementById("hdrName").textContent = c.fullName;
+  document.getElementById("hdrSub").textContent = [c.email,c.phone].filter(Boolean).join(" · ");
+  renderHdrChips(c);
+  updateRemBtn();
+  renderMessages();
+  renderClientList();
+}
+
+function goBack() {
+  document.getElementById("sidebar").classList.remove("hidden");
+  document.getElementById("chatView").style.display="none";
+  document.getElementById("emptyState").style.display="flex";
+  selectedClientId=null;
+  renderClientList();
+}
+
+function renderHdrChips(c) {
+  document.getElementById("hdrChips").innerHTML = `
+    ${c.clientType?`<span class="chip" style="${chipStyle(c.clientType,TYPE_COLORS)};padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600;">${c.clientType}</span>`:""}
+    ${c.status?`<span class="chip" style="${chipStyle(c.status,STATUS_COLORS)};padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600;">${c.status}</span>`:""}`;
+}
+
+function updateRemBtn() {
+  const pr = Object.values(reminders).filter(r=>r.clientId===selectedClientId&&!r.done).length;
+  document.getElementById("remBtn").innerHTML = `⏰${pr>0?`<span class="ibadge">${pr}</span>`:""}`;
+}
+
+// ── MESSAGES ──────────────────────────────────────────────────────────────────
+function renderMessages() {
+  const body = document.getElementById("chatBody");
+  const msgs = messages[selectedClientId]||[];
+  let html="", lastDate=null;
+  for(const m of msgs) {
+    const d=fDate(m.timestamp);
+    if(d!==lastDate){html+=`<div class="date-div"><span>${d}</span></div>`;lastDate=d;}
+    html+=renderMsg(m);
+  }
+  body.innerHTML=html;
+  body.scrollTop=body.scrollHeight;
+}
+
+function renderMsg(m) {
+  if(m.type==="form") {
+    const c=clients.find(x=>x.id===m.content)||clients.find(x=>x.id===selectedClientId)||{};
+    return `<div class="mw in">
+      <div class="mlabel">Intake Form Received</div>
+      <div class="bubble form-card">
+        <div class="form-card-hd">Property Request</div>
+        <div class="form-grid">
+          ${c.budget?`<div><div class="ff-label">Budget</div><div class="ff-val">${esc(c.budget)}</div></div>`:""}
+          ${c.propertyType?`<div><div class="ff-label">Type</div><div class="ff-val">${esc(c.propertyType)}</div></div>`:""}
+          ${c.preferredLocation?`<div><div class="ff-label">Location</div><div class="ff-val">${esc(c.preferredLocation)}</div></div>`:""}
+          ${c.bedrooms?`<div><div class="ff-label">Bedrooms</div><div class="ff-val">${esc(c.bedrooms)}</div></div>`:""}
+          ${c.bathrooms?`<div><div class="ff-label">Bathrooms</div><div class="ff-val">${esc(c.bathrooms)}</div></div>`:""}
+          ${c.parking?`<div><div class="ff-label">Parking</div><div class="ff-val">${esc(c.parking)}</div></div>`:""}
+          ${c.lotSize?`<div><div class="ff-label">Lot Size</div><div class="ff-val">${esc(c.lotSize)}</div></div>`:""}
+          ${c.constructionSize?`<div><div class="ff-label">Construction</div><div class="ff-val">${esc(c.constructionSize)}</div></div>`:""}
+          ${c.amenities?`<div class="ff-full"><div class="ff-label">Amenities</div><div class="ff-val">${esc(c.amenities)}</div></div>`:""}
+          ${c.otherFeatures?`<div class="ff-full"><div class="ff-label">Other Features</div><div class="ff-val">${esc(c.otherFeatures)}</div></div>`:""}
+        </div>
+      </div>
+      <div class="mtime">${fTime(m.timestamp)}</div>
+    </div>`;
+  }
+  if(m.type==="reminder") {
+    const r=reminders[m.content]||{};
+    const done=r.done||false;
+    return `<div class="mw out">
+      <div class="bubble rem-bubble">
+        <div class="rem-hd"><span style="font-size:18px;">⏰</span><span class="rem-title">${esc(r.title||"Reminder")}</span></div>
+        <div class="rem-due">${esc(r.dueDate||"")}${r.dueTime?" · "+esc(r.dueTime):""}</div>
+        ${r.note?`<div class="rem-note">${esc(r.note)}</div>`:""}
+        <div class="rem-actions">
+          <button class="rem-btn${done?" done-btn":""}" onclick="${done?"":"markDone('"+r.id+"')"}">${done?"✓ Completed":"✓ Mark Done"}</button>
+        </div>
+      </div>
+      <div class="mtime">${fTime(m.timestamp)}</div>
+    </div>`;
+  }
+  if(m.type==="ai") return `<div class="mw in">
+    <div class="bubble ai"><div class="ai-tag">AI Assistant</div><div>${esc(m.content)}</div></div>
+    <div class="mtime">${fTime(m.timestamp)}</div>
+  </div>`;
+  if(m.type==="note") return `<div class="mw out">
+    <div class="bubble note">${esc(m.content)}</div>
+    <div class="mtime">${fTime(m.timestamp)}</div>
+  </div>`;
+  if(m.type==="question") return `<div class="mw out">
+    <div class="bubble question">${esc(m.content)}</div>
+    <div class="mtime">${fTime(m.timestamp)}</div>
+  </div>`;
+  return "";
+}
+
+function appendMsg(m) {
+  const body=document.getElementById("chatBody");
+  body.insertAdjacentHTML("beforeend",renderMsg(m));
+  body.scrollTop=body.scrollHeight;
+}
+
+// ── SEND ──────────────────────────────────────────────────────────────────────
+const REMINDER_SYSTEM=`You are a reminder parser for a real estate CRM.
+Determine if the user message is requesting a reminder (e.g. "remind me to call Scott at 9am Saturday").
+If YES, return ONLY this JSON (no markdown):
+{"isReminder":true,"title":"...","dueDate":"...","dueTime":"...","note":"..."}
+If NO, return ONLY: {"isReminder":false}
+Use natural language for dueDate (Saturday, Monday, Tomorrow).
+Use "9:00 AM" format for dueTime. If no time, use "".
+Make title concise. Put extra context in note.`;
+
+async function sendMessage() {
+  const input=document.getElementById("msgInput");
+  const text=input.value.trim();
+  if(!text||!selectedClientId||isLoading) return;
+  input.value=""; autoResize(input);
+
+  if(inputMode==="note") {
+    setLoading(true);
+    let parsed={isReminder:false};
+    try{const raw=await callClaude(REMINDER_SYSTEM,text,200);parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());}catch(e){}
+    setLoading(false);
+    if(parsed.isReminder) {
+      const rid="r_"+Date.now();
+      const rem={id:rid,clientId:selectedClientId,title:parsed.title,dueDate:parsed.dueDate,dueTime:parsed.dueTime,note:parsed.note||"",done:false,createdAt:new Date().toISOString()};
+      reminders[rid]=rem;
+      const msg={id:"m_"+Date.now(),clientId:selectedClientId,type:"reminder",content:rid,timestamp:new Date().toISOString(),sender:"You"};
+      if(!messages[selectedClientId]) messages[selectedClientId]=[];
+      messages[selectedClientId].push(msg);
+      appendMsg(msg); updateRemBtn(); renderClientList();
+      showToast("⏰ Reminder set");
+    } else {
+      const msg={id:"m_"+Date.now(),clientId:selectedClientId,type:"note",content:text,timestamp:new Date().toISOString(),sender:"You"};
+      if(!messages[selectedClientId]) messages[selectedClientId]=[];
+      messages[selectedClientId].push(msg);
+      appendMsg(msg);
+    }
+  } else {
+    const qMsg={id:"m_"+Date.now(),clientId:selectedClientId,type:"question",content:text,timestamp:new Date().toISOString(),sender:"You"};
+    if(!messages[selectedClientId]) messages[selectedClientId]=[];
+    messages[selectedClientId].push(qMsg);
+    appendMsg(qMsg);
+    showTyping();
+    const c=clients.find(x=>x.id===selectedClientId)||{};
+    const history=(messages[selectedClientId]||[]).map(m=>`[${m.sender}]: ${m.type==="form"?"[Form submitted]":m.type==="reminder"?"[Reminder set]":m.content}`).join("\n");
+    const answer=await callClaude(`You are an intelligent real estate CRM assistant. Answer questions about this client based on their profile and history. Be concise and accurate.`,`Client:\n${JSON.stringify(c,null,2)}\n\nHistory:\n${history}\n\nQuestion: ${text}`);
+    hideTyping();
+    const aMsg={id:"m_"+(Date.now()+1),clientId:selectedClientId,type:"ai",content:answer,timestamp:new Date().toISOString(),sender:"AI Assistant"};
+    messages[selectedClientId].push(aMsg);
+    appendMsg(aMsg);
+  }
+}
+
+async function callClaude(system,user,maxTokens=800) {
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxTokens,system,messages:[{role:"user",content:user}]})});
+    const data=await res.json();
+    return data.content?.find(b=>b.type==="text")?.text||"";
+  }catch(e){return "Error: "+e.message;}
+}
+
+function showTyping(){const body=document.getElementById("chatBody");body.insertAdjacentHTML("beforeend",`<div class="mw in" id="typingWrap"><div class="mlabel">AI Assistant</div><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`);body.scrollTop=body.scrollHeight;}
+function hideTyping(){const t=document.getElementById("typingWrap");if(t)t.remove();}
+function setLoading(v){isLoading=v;document.getElementById("lbar").style.display=v?"block":"none";}
+function setMode(m){
+  inputMode=m;
+  document.getElementById("tabNote").classList.toggle("on",m==="note");
+  document.getElementById("tabAsk").classList.toggle("on",m==="ask");
+  document.getElementById("msgInput").placeholder=m==="note"?`Write a note… or "remind me to call Scott at 9am Saturday"`:"Ask anything… e.g. Has Scott provided a budget and a flight date?";
+  document.getElementById("inputHint").style.display=m==="note"?"block":"none";
+}
+function handleKey(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function autoResize(el){el.style.height="auto";el.style.height=Math.min(el.scrollHeight,100)+"px";}
+function markDone(rid){if(reminders[rid])reminders[rid].done=true;renderMessages();updateRemBtn();renderClientList();}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function openModal(type){
+  const box=document.getElementById("modalBox");
+  document.getElementById("modalOverlay").style.display="flex";
+  if(type==="addClient") box.innerHTML=clientFormHTML("Create Client","handleAddClient");
+  else if(type==="intake") box.innerHTML=clientFormHTML("Submit Form","handleIntake",true);
+  else if(type==="reminders") box.innerHTML=remindersHTML();
+  else if(type==="remForm") box.innerHTML=reminderFormHTML();
+  else if(type==="labels") box.innerHTML=labelsHTML();
+}
+function closeModal(){document.getElementById("modalOverlay").style.display="none";document.getElementById("modalBox").innerHTML="";}
+function overlayClick(e){if(e.target===e.currentTarget)closeModal();}
+
+function clientFormHTML(btnLabel,submitFn,bilingual=false) {
+  const L=(en,es)=>bilingual?`${en} <em style="color:var(--text3);font-style:normal;font-size:10px;">/ ${es}</em>`:en;
+  const ph=(en,es)=>bilingual?`${en} / ${es}`:en;
+  const sel=(field,opts)=>`<select class="finput" id="f_${field}">${opts.map(o=>`<option>${o}</option>`).join("")}</select>`;
+  return `
+  <div class="mhdr"><div class="mtitle">${bilingual?"Intake Form":"New Client"}</div><button class="mclose" onclick="closeModal()">×</button></div>
+  <div class="mbody">
+    ${bilingual?`<p style="font-size:12px;color:var(--text2);margin-bottom:12px;">Share with your prospect. / Comparte con tu prospecto.</p>`:""}
+    <div class="fsec">
+      <div class="fsec-title">Contact</div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Full Name","Nombre completo")}</label><input class="finput" id="f_fullName" placeholder="${ph("John Smith","Juan García")}"></div>
+      <div class="fg"><label class="flabel">${L("Email","Correo")}</label><input class="finput" id="f_email" type="email" placeholder="john@email.com"></div></div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Phone","Teléfono")}</label><input class="finput" id="f_phone" type="tel" placeholder="+1 555 000"></div>
+      <div class="fg"><label class="flabel">${L("Budget","Presupuesto")}</label><input class="finput" id="f_budget" placeholder="${ph("$500,000","₡250,000,000")}"></div></div>
+    </div>
+    <div class="fsec">
+      <div class="fsec-title">Property Preferences</div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Property Type","Tipo")}</label><input class="finput" id="f_propertyType" placeholder="${ph("House, Condo…","Casa, Apto…")}"></div>
+      <div class="fg"><label class="flabel">${L("Location","Ubicación")}</label><input class="finput" id="f_preferredLocation" placeholder="Tamarindo…"></div></div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Bedrooms","Habitaciones")}</label><input class="finput" id="f_bedrooms" placeholder="3"></div>
+      <div class="fg"><label class="flabel">${L("Bathrooms","Baños")}</label><input class="finput" id="f_bathrooms" placeholder="2"></div></div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Lot Size","Tamaño lote")}</label><input class="finput" id="f_lotSize" placeholder="500 m²"></div>
+      <div class="fg"><label class="flabel">${L("Construction","Construcción")}</label><input class="finput" id="f_constructionSize" placeholder="250 m²"></div></div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Parking","Estacionamiento")}</label><input class="finput" id="f_parking" placeholder="2"></div><div></div></div>
+      <div class="frow one"><div class="fg"><label class="flabel">${L("Amenities","Amenidades")}</label><input class="finput" id="f_amenities" placeholder="${ph("Pool, Gym…","Piscina, Gym…")}"></div></div>
+      <div class="frow one"><div class="fg"><label class="flabel">${L("Other Features","Otras características")}</label><input class="finput" id="f_otherFeatures" placeholder="${ph("Ocean view…","Vista al mar…")}"></div></div>
+    </div>
+    <div class="fsec">
+      <div class="fsec-title">Classification</div>
+      <div class="frow">
+        <div class="fg"><label class="flabel">${L("Client Type","Tipo de cliente")}</label>${sel("clientType",CLIENT_TYPES)}</div>
+        <div class="fg"><label class="flabel">${L("Status","Estado")}</label>${sel("status",CLIENT_STATUSES)}</div>
+      </div>
+    </div>
+    <div class="factions">
+      <button class="fbtn fbtn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="fbtn fbtn-gold" onclick="${submitFn}()">${btnLabel}</button>
+    </div>
+  </div>`;
+}
+
+function getFormData(){
+  const fields=["fullName","email","phone","budget","propertyType","preferredLocation","bedrooms","bathrooms","lotSize","constructionSize","parking","amenities","otherFeatures","clientType","status"];
+  const d={};fields.forEach(f=>{const el=document.getElementById("f_"+f);if(el)d[f]=el.value;});return d;
+}
+function handleAddClient(){
+  const d=getFormData();if(!d.fullName)return;
+  const id="c_"+Date.now(),c={...d,id,createdAt:new Date().toISOString()};
+  clients.unshift(c);messages[id]=[];closeModal();selectClient(id);renderClientList();showToast("Client created");
+}
+function handleIntake(){
+  const d=getFormData();if(!d.fullName)return;
+  const id="c_"+Date.now(),c={...d,id,createdAt:new Date().toISOString()};
+  const msg={id:"m_"+Date.now(),clientId:id,type:"form",content:id,timestamp:new Date().toISOString(),sender:"System"};
+  clients.unshift(c);messages[id]=[msg];closeModal();selectClient(id);renderClientList();showToast("Intake submitted");
+}
+
+function remindersHTML(){
+  const cRems=Object.values(reminders).filter(r=>r.clientId===selectedClientId);
+  const items=cRems.length?cRems.map(r=>`
+    <div class="rem-item${r.done?" faded":""}">
+      <div>
+        <div style="font-weight:600;color:var(--gold2);font-size:13px;">${esc(r.title)}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${esc(r.dueDate)}${r.dueTime?" · "+esc(r.dueTime):""}</div>
+        ${r.note?`<div style="font-size:13px;color:var(--text);margin-top:4px;">${esc(r.note)}</div>`:""}
+      </div>
+      ${!r.done?`<button class="rem-btn" onclick="markDone('${r.id}');openModal('reminders')">✓ Done</button>`:`<button class="rem-btn done-btn">✓ Done</button>`}
+    </div>`).join(""):`<p style="color:var(--text3);font-size:13px;margin-bottom:14px;">No reminders yet.</p>`;
+  return `<div class="mhdr"><div class="mtitle">⏰ Reminders</div><button class="mclose" onclick="closeModal()">×</button></div>
+  <div class="mbody"><div class="rem-list">${items}</div><button class="fbtn fbtn-gold" style="width:100%;" onclick="openModal('remForm')">+ Add Reminder</button></div>`;
+}
+
+function reminderFormHTML(){
+  return `<div class="mhdr"><div class="mtitle">⏰ New Reminder</div><button class="mclose" onclick="closeModal()">×</button></div>
+  <div class="mbody">
+    <div class="fg" style="margin-bottom:12px;"><label class="flabel">Title</label><input class="finput" id="rf_title" placeholder="e.g. Follow up on budget" style="margin-top:5px;"></div>
+    <div class="frow" style="margin-bottom:12px;">
+      <div class="fg"><label class="flabel">Date</label><input type="date" class="finput" id="rf_date" style="margin-top:5px;"></div>
+      <div class="fg"><label class="flabel">Time</label><input type="time" class="finput" id="rf_time" style="margin-top:5px;"></div>
+    </div>
+    <div class="fg" style="margin-bottom:14px;"><label class="flabel">Note (optional)</label><textarea class="finput" id="rf_note" rows="3" style="margin-top:5px;resize:none;" placeholder="Additional context…"></textarea></div>
+    <div class="factions">
+      <button class="fbtn fbtn-ghost" onclick="openModal('reminders')">Back</button>
+      <button class="fbtn fbtn-gold" onclick="saveReminder()">Add Reminder</button>
+    </div>
+  </div>`;
+}
+
+function saveReminder(){
+  const title=document.getElementById("rf_title")?.value.trim();
+  const date=document.getElementById("rf_date")?.value;
+  if(!title||!date)return;
+  const rid="r_"+Date.now();
+  const rem={id:rid,clientId:selectedClientId,title,dueDate:date,dueTime:document.getElementById("rf_time")?.value||"",note:document.getElementById("rf_note")?.value||"",done:false,createdAt:new Date().toISOString()};
+  reminders[rid]=rem;
+  const msg={id:"m_"+Date.now(),clientId:selectedClientId,type:"reminder",content:rid,timestamp:new Date().toISOString(),sender:"You"};
+  if(!messages[selectedClientId])messages[selectedClientId]=[];
+  messages[selectedClientId].push(msg);appendMsg(msg);updateRemBtn();renderClientList();closeModal();showToast("⏰ Reminder added");
+}
+
+function labelsHTML(){
+  const c=clients.find(x=>x.id===selectedClientId)||{};
+  const typeBtns=CLIENT_TYPES.map(t=>{
+    const cs=TYPE_COLORS[t]||{bg:"#F0F0F0",text:"#606060",border:"#D0D0D0"};
+    const sel=c.clientType===t;
+    return `<button class="stag" onclick="setLabel('clientType','${t}')" style="background:${sel?cs.bg:"#F5F5F5"};color:${sel?cs.text:"#909090"};border:1px solid ${sel?cs.border:"#E0E0E0"};">${t}</button>`;
+  }).join("");
+  const statBtns=CLIENT_STATUSES.map(s=>{
+    const cs=STATUS_COLORS[s]||{bg:"#F0F0F0",text:"#606060",border:"#D0D0D0"};
+    const sel=c.status===s;
+    return `<button class="stag" onclick="setLabel('status','${s}')" style="background:${sel?cs.bg:"#F5F5F5"};color:${sel?cs.text:"#909090"};border:1px solid ${sel?cs.border:"#E0E0E0"};">${s}</button>`;
+  }).join("");
+  return `<div class="mhdr"><div class="mtitle">🏷 Labels</div><button class="mclose" onclick="closeModal()">×</button></div>
+  <div class="mbody">
+    <div style="margin-bottom:20px;"><div class="fsec-title">Client Type</div><div class="srow">${typeBtns}</div></div>
+    <div><div class="fsec-title">Status</div><div class="srow">${statBtns}</div></div>
+    <div class="factions"><button class="fbtn fbtn-gold" onclick="closeModal()">Done</button></div>
+  </div>`;
+}
+
+function setLabel(field,val){
+  const c=clients.find(x=>x.id===selectedClientId);if(!c)return;
+  c[field]=val;renderHdrChips(c);renderClientList();openModal("labels");
+}
+
+function showToast(msg){
+  const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";
+  setTimeout(()=>t.style.display="none",2800);
+}
+</script>
+</body>
+</html>
