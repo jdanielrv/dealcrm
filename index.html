@@ -2,276 +2,373 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>Deal CRM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
-  --bg:#EEF2F7;--bg2:#FFFFFF;--bg3:#E4EAF3;--bg4:#D6E0EE;--bg5:#C8D4E8;
-  --navy:#1B2E4B;--navy2:#243D63;--navy3:#2D4E7A;--navy-lt:#E8EEF7;--navy-border:#A0B4D0;
-  --text:#0F1E30;--text2:#3A4E66;--text3:#7A8FA8;--text4:#B0C0D4;
-  --border:#D0DCE8;--border2:#B8CADE;
-  --green-bg:#E6F4EC;--green-text:#1A6A3A;--green-border:#90CCA8;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --navy:#1B2E4B;--navy2:#243D63;--navy3:#152438;
+  --bg:#F0F4F8;--bg2:#FFFFFF;--bg3:#E8EEF5;--bg4:#D8E2EE;
+  --text:#0D1B2A;--text2:#3A5068;--text3:#7A90A8;--text4:#B0C4D8;
+  --border:#D4DEE8;--border2:#C0CED8;
+  --green:#1A7A40;--green-bg:#E8F5EE;--green-border:#90CCA8;
+  --safe-top: env(safe-area-inset-top, 44px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
 }
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;}
 
-.app{display:flex;height:100dvh;width:100vw;overflow:hidden;position:relative;}
+/* ── SCREEN SYSTEM: two screens, only one visible at a time on mobile ── */
+.app{position:relative;width:100vw;height:100dvh;overflow:hidden;display:flex;}
 
-/* ── SIDEBAR ── */
-.sidebar{width:100%;max-width:310px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;transition:transform .25s ease;}
-.sidebar-top{padding:18px 16px 0;}
-.brand{display:flex;align-items:center;gap:11px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
-.brand-mark{width:36px;height:36px;border-radius:9px;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.brand-mark svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.brand-name{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:var(--navy);letter-spacing:.2px;}
-.brand-sub{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+/* ── CONTACTS SCREEN (full width on mobile) ── */
+.contacts-screen{
+  width:100%;height:100%;display:flex;flex-direction:column;
+  background:var(--bg2);flex-shrink:0;
+}
 
-.search{display:flex;align-items:center;gap:9px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:9px 13px;margin-bottom:11px;}
-.search svg{width:15px;height:15px;stroke:var(--text3);fill:none;stroke-width:2;flex-shrink:0;}
-.search input{background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;width:100%;}
-.search input::placeholder{color:var(--text3);}
+/* ── CHAT SCREEN (slides in from right on mobile) ── */
+.chat-screen{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;flex-direction:column;background:var(--bg);
+  transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+  z-index:10;
+}
+.chat-screen.open{transform:translateX(0);}
 
-.sbtn-row{display:flex;gap:8px;margin-bottom:13px;}
-.sbtn{flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;transition:all .15s;}
-.sbtn-navy{background:var(--navy);color:#fff;}
-.sbtn-navy:hover{background:var(--navy2);}
-.sbtn-outline{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}
-.sbtn-outline:hover{background:var(--bg4);}
+/* On tablet/desktop: side by side */
+@media(min-width:680px){
+  .contacts-screen{width:320px;min-width:320px;border-right:1px solid var(--border);flex-shrink:0;}
+  .chat-screen{position:relative;transform:none !important;flex:1;}
+}
 
-.filter-row{display:flex;gap:5px;padding:9px 16px;overflow-x:auto;border-bottom:1px solid var(--border);border-top:1px solid var(--border);}
+/* ── CONTACTS HEADER ── */
+.contacts-hdr{
+  padding-top:calc(var(--safe-top) + 12px);
+  padding-bottom:14px;
+  padding-left:18px;padding-right:18px;
+  background:var(--navy);
+}
+.contacts-hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.brand-name{font-size:22px;font-weight:700;color:#fff;letter-spacing:-.2px;}
+.brand-sub{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;margin-top:1px;}
+.hdr-actions{display:flex;gap:8px;}
+.hdr-icon-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,.12);border:none;cursor:pointer;
+  color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;
+}
+.search-wrap{
+  display:flex;align-items:center;gap:9px;
+  background:rgba(255,255,255,.12);border-radius:12px;
+  padding:9px 14px;
+}
+.search-wrap svg{width:15px;height:15px;stroke:rgba(255,255,255,.6);fill:none;stroke-width:2;flex-shrink:0;}
+.search-wrap input{background:none;border:none;outline:none;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;width:100%;}
+.search-wrap input::placeholder{color:rgba(255,255,255,.45);}
+
+/* filter pills */
+.filter-row{display:flex;gap:6px;padding:10px 18px;overflow-x:auto;background:var(--bg2);border-bottom:1px solid var(--border);}
 .filter-row::-webkit-scrollbar{display:none;}
-.fpill{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;border:1px solid var(--border2);background:var(--bg2);color:var(--text3);}
+.fpill{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;border:1px solid var(--border2);background:var(--bg2);color:var(--text3);flex-shrink:0;}
 .fpill.on{background:var(--navy);color:#fff;border-color:var(--navy);}
 
-.clist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.citem{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;position:relative;transition:background .1s;}
-.citem:hover{background:var(--bg3);}
-.citem.sel{background:var(--navy-lt);border-left:3px solid var(--navy);}
-.citem-name{font-weight:600;font-size:15px;margin-bottom:3px;color:var(--text);}
-.citem-sub{font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px;}
-.citem-chips{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;}
-.chip{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:.2px;text-transform:uppercase;}
-.citem-time{position:absolute;top:14px;right:13px;font-size:11px;color:var(--text4);}
-.cbadge{position:absolute;bottom:12px;right:13px;background:var(--navy);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:2px 7px;}
+/* contact list */
+.clist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg2);}
 
-/* ── MAIN ── */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg);}
+/* contact item — WhatsApp style */
+.citem{
+  display:flex;align-items:center;gap:13px;
+  padding:13px 18px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .1s;position:relative;
+}
+.citem:active{background:var(--bg3);}
+.citem.sel{background:var(--bg3);}
+.citem-ava{
+  width:50px;height:50px;border-radius:50%;flex-shrink:0;
+  background:var(--navy);display:flex;align-items:center;justify-content:center;
+  font-size:17px;font-weight:700;color:#fff;letter-spacing:-.5px;
+}
+.citem-body{flex:1;min-width:0;}
+.citem-row1{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:3px;}
+.citem-name{font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.citem-time{font-size:12px;color:var(--text3);flex-shrink:0;}
+.citem-row2{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.citem-sub{font-size:13px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+.citem-badges{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+.rem-badge{background:var(--navy);color:#fff;border-radius:50%;width:20px;height:20px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.citem-chips{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
+.chip{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:600;letter-spacing:.2px;text-transform:uppercase;}
 
-@media(max-width:640px){
-  .sidebar{position:absolute;z-index:10;height:100%;transform:translateX(0);}
-  .sidebar.hidden{transform:translateX(-100%);}
-  .main{width:100%;}
+/* bottom add button */
+.fab{
+  position:absolute;bottom:calc(24px + var(--safe-bottom));right:20px;
+  width:56px;height:56px;border-radius:50%;
+  background:var(--navy);color:#fff;border:none;cursor:pointer;
+  font-size:26px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(27,46,75,.35);z-index:5;
 }
 
-/* chat header */
-.chat-hdr{padding:13px 18px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px;}
-.chat-hdr-l{display:flex;align-items:center;gap:11px;min-width:0;}
-.back-btn{font-size:24px;color:var(--navy);cursor:pointer;padding:2px 8px 2px 0;display:none;line-height:1;font-weight:300;}
-@media(max-width:640px){.back-btn{display:block;}}
-.ava{width:40px;height:40px;border-radius:50%;background:var(--navy-lt);border:2px solid var(--navy-border);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;color:var(--navy);flex-shrink:0;}
-.hdr-info{min-width:0;}
-.hdr-name{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
-.hdr-sub{font-size:12px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.hdr-chips{display:flex;gap:5px;flex-wrap:nowrap;overflow:hidden;}
-.hdr-btns{display:flex;gap:7px;flex-shrink:0;}
-.ibtn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;transition:background .15s;}
-.ibtn:hover{background:var(--bg4);}
-.ibadge{position:absolute;top:-4px;right:-4px;background:var(--navy);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+/* ── CHAT SCREEN HEADER ── */
+.chat-hdr{
+  padding-top:calc(var(--safe-top) + 10px);
+  padding-bottom:12px;padding-left:12px;padding-right:16px;
+  background:var(--navy);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.back-btn{
+  color:#fff;font-size:28px;cursor:pointer;
+  padding:4px 6px 4px 2px;line-height:1;font-weight:300;flex-shrink:0;
+}
+.chat-ava{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  background:rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff;
+}
+.chat-hdr-info{flex:1;min-width:0;}
+.chat-hdr-name{font-size:17px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-hdr-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-hdr-right{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.hdr-chip-sm{padding:4px 9px;border-radius:5px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.2px;}
+.chat-icon-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,.12);border:none;cursor:pointer;
+  color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.ibadge{position:absolute;top:-3px;right:-3px;background:#E8C84A;color:#0D1B2A;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;}
 
-/* chat body */
-.chat-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px;display:flex;flex-direction:column;gap:11px;}
+/* ── CHAT BODY ── */
+.chat-body{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:14px 14px 10px;display:flex;flex-direction:column;gap:8px;
+  /* WhatsApp-style subtle background */
+  background:var(--bg);
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(27,46,75,.04) 0%, transparent 60%),
+    radial-gradient(circle at 80% 70%, rgba(27,46,75,.03) 0%, transparent 60%);
+}
 
 /* date divider */
-.date-div{display:flex;align-items:center;gap:10px;margin:4px 0;}
+.date-div{display:flex;align-items:center;gap:10px;margin:6px 0;}
 .date-div::before,.date-div::after{content:'';flex:1;height:1px;background:var(--border);}
-.date-div span{font-size:11px;color:var(--text3);white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;}
+.date-div span{font-size:11px;color:var(--text3);white-space:nowrap;letter-spacing:.4px;text-transform:uppercase;background:var(--bg);padding:0 6px;}
 
 /* message wrappers */
 .mw{display:flex;flex-direction:column;max-width:100%;}
 .mw.out{align-items:flex-end;}
 .mw.in{align-items:flex-start;}
-.mlabel{font-size:11px;color:var(--text3);margin-bottom:4px;padding:0 4px;letter-spacing:.3px;text-transform:uppercase;}
-.mtime{font-size:11px;color:var(--text4);margin-top:4px;padding:0 4px;}
+.mlabel{font-size:11px;color:var(--text3);margin-bottom:4px;padding:0 4px;letter-spacing:.2px;font-weight:500;}
+.mtime{font-size:11px;color:var(--text4);margin-top:3px;padding:0 5px;}
 
 /* bubbles */
-.bubble{padding:11px 15px;border-radius:14px;font-size:15px;line-height:1.6;max-width:78%;word-break:break-word;}
-.bubble.note{background:var(--navy);color:#fff;border-radius:14px 3px 14px 14px;}
-.bubble.question{background:var(--navy2);color:#fff;border-radius:14px 3px 14px 14px;}
-.bubble.ai{background:var(--bg2);color:var(--text);border-radius:3px 14px 14px 14px;border:1px solid var(--border2);max-width:85%;}
-.ai-tag{font-size:11px;color:var(--navy);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600;}
-.bubble.form-card{background:var(--bg2);border:1px solid var(--navy-border);border-radius:3px 14px 14px 14px;max-width:92%;padding:16px;}
-.form-card-hd{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--navy);margin-bottom:12px;font-weight:700;}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;}
-.ff-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;}
+.bubble{padding:10px 14px;border-radius:18px;font-size:15px;line-height:1.55;max-width:80%;word-break:break-word;}
+.bubble.note{background:var(--navy);color:#fff;border-radius:18px 4px 18px 18px;box-shadow:0 1px 4px rgba(27,46,75,.2);}
+.bubble.question{background:var(--navy2);color:#fff;border-radius:18px 4px 18px 18px;box-shadow:0 1px 4px rgba(27,46,75,.2);}
+.bubble.ai{background:#fff;color:var(--text);border-radius:4px 18px 18px 18px;border:1px solid var(--border);max-width:86%;box-shadow:0 1px 3px rgba(0,0,0,.07);}
+.ai-tag{font-size:11px;color:var(--navy);letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;font-weight:700;}
+
+/* form card */
+.bubble.form-card{background:#fff;border:1px solid var(--border);border-top:3px solid var(--navy);border-radius:4px 18px 18px 18px;max-width:92%;padding:15px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.form-card-hd{font-size:15px;color:var(--navy);margin-bottom:12px;font-weight:700;display:flex;align-items:center;gap:7px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;}
+.ff-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;font-weight:500;}
 .ff-val{font-size:14px;color:var(--text);font-weight:500;margin-top:1px;}
 .ff-full{grid-column:1/-1;}
-.bubble.rem-bubble{background:var(--bg2);border:1px solid var(--navy-border);border-left:4px solid var(--navy);border-radius:14px 3px 14px 14px;max-width:85%;padding:13px 15px;}
-.rem-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.rem-title{font-weight:600;font-size:15px;color:var(--navy);}
-.rem-due{font-size:13px;color:var(--text2);margin-bottom:5px;}
+
+/* reminder bubble */
+.bubble.rem-bubble{
+  background:#fff;border:1px solid var(--border);border-left:4px solid var(--navy);
+  border-radius:18px 4px 18px 18px;max-width:86%;padding:12px 14px;
+  box-shadow:0 1px 4px rgba(0,0,0,.07);
+}
+.rem-hd{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.rem-title{font-weight:700;font-size:15px;color:var(--navy);}
+.rem-due{font-size:13px;color:var(--text2);margin-bottom:4px;}
 .rem-note{font-size:14px;color:var(--text);}
 .rem-actions{display:flex;gap:8px;margin-top:10px;}
-.rem-btn{padding:6px 14px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text2);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
-.rem-btn:hover{background:var(--bg3);}
-.rem-btn.done-btn{background:var(--green-bg);color:var(--green-text);border-color:var(--green-border);}
+.rem-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border2);background:none;color:var(--text2);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;}
+.rem-btn.done-btn{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
 
 /* typing */
-.typing{display:flex;gap:5px;align-items:center;padding:11px 14px;background:var(--bg2);border:1px solid var(--border2);border-radius:3px 14px 14px 14px;width:fit-content;}
-.tdot{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:td 1.2s infinite;}
-.tdot:nth-child(2){animation-delay:.2s;}
-.tdot:nth-child(3){animation-delay:.4s;}
-@keyframes td{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.typing{display:flex;gap:5px;align-items:center;padding:12px 14px;background:#fff;border:1px solid var(--border);border-radius:4px 18px 18px 18px;width:fit-content;box-shadow:0 1px 3px rgba(0,0,0,.07);}
+.tdot{width:7px;height:7px;background:var(--text3);border-radius:50%;animation:td 1.2s infinite;}
+.tdot:nth-child(2){animation-delay:.2s;}.tdot:nth-child(3){animation-delay:.4s;}
+@keyframes td{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
 
-/* ── INPUT ── */
-.input-area{padding:11px 16px;padding-bottom:calc(11px + var(--safe-bottom));background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;}
+/* ── INPUT BAR ── */
+.input-area{
+  padding:10px 14px;
+  padding-bottom:calc(10px + var(--safe-bottom));
+  background:#fff;border-top:1px solid var(--border);flex-shrink:0;
+}
 .mode-row{display:flex;gap:7px;margin-bottom:9px;}
-.mtab{padding:6px 16px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;}
+.mtab{padding:6px 16px;border-radius:20px;border:1.5px solid var(--border2);background:#fff;color:var(--text3);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s;}
 .mtab.on{background:var(--navy);color:#fff;border-color:var(--navy);}
 .irow{display:flex;gap:9px;align-items:flex-end;}
-.ibox{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:11px;padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;resize:none;outline:none;min-height:46px;max-height:110px;line-height:1.5;transition:border-color .15s;}
+.ibox{
+  flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:22px;
+  padding:11px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;
+  resize:none;outline:none;min-height:46px;max-height:110px;line-height:1.5;
+  transition:border-color .15s;
+}
 .ibox:focus{border-color:var(--navy);}
 .ibox::placeholder{color:var(--text3);}
-.send{width:46px;height:46px;border-radius:11px;border:none;flex-shrink:0;background:var(--navy);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
-.send:hover{background:var(--navy2);}
-.send svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
-.hint{font-size:12px;color:var(--text3);margin-top:7px;}
-
-/* ── MODALS ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fIn .15s ease;}
-@media(min-width:641px){.overlay{align-items:center;}}
-@keyframes fIn{from{opacity:0}to{opacity:1}}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:22px 22px 0 0;width:100%;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:sUp .22s ease;padding-bottom:env(safe-area-inset-bottom,0);}
-@media(min-width:641px){.modal{border-radius:16px;width:580px;max-width:96vw;max-height:90dvh;}}
-@keyframes sUp{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
-.mhdr{padding:20px 20px 0;display:flex;justify-content:space-between;align-items:center;}
-.mtitle{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--navy);font-weight:700;}
-.mclose{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;}
-.mbody{padding:18px 20px 24px;}
-
-.fsec{margin-bottom:18px;}
-.fsec-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy);margin-bottom:11px;font-weight:600;}
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px;}
-.frow.one{grid-template-columns:1fr;}
-.fg{display:flex;flex-direction:column;gap:5px;}
-.flabel{font-size:12px;color:var(--text2);font-weight:500;}
-.finput{background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;width:100%;transition:border-color .15s;}
-.finput:focus{border-color:var(--navy);}
-.finput::placeholder{color:var(--text3);}
-select.finput{cursor:pointer;}
-.factions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
-.fbtn{padding:11px 22px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
-.fbtn-navy{background:var(--navy);color:#fff;}
-.fbtn-navy:hover{background:var(--navy2);}
-.fbtn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2);}
-.fbtn-ghost:hover{background:var(--bg4);}
-
-.srow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
-.stag{padding:8px 15px;border-radius:8px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;border:1px solid transparent;transition:all .15s;}
-
-.rem-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
-.rem-item{background:var(--bg3);border:1px solid var(--border);border-radius:11px;padding:13px 15px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
-.rem-item.faded{opacity:.45;}
-
-/* empty */
-.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--text3);padding:30px;}
-.empty-icon{width:56px;height:56px;opacity:.18;}
-.empty h3{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--text2);font-weight:600;}
-.empty p{font-size:14px;text-align:center;line-height:1.7;max-width:270px;}
-
-/* toast */
-.toast{position:fixed;bottom:calc(90px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 20px;border-radius:9px;font-size:14px;z-index:999;white-space:nowrap;animation:sUp .2s ease;font-weight:500;}
+.send{
+  width:46px;height:46px;border-radius:50%;border:none;flex-shrink:0;
+  background:var(--navy);color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(27,46,75,.3);transition:background .15s;
+}
+.send:active{background:var(--navy2);}
+.send svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;margin-left:2px;}
+.hint{font-size:12px;color:var(--text3);margin-top:7px;padding:0 4px;}
 
 /* loading bar */
 .lbar{height:2px;background:linear-gradient(90deg,transparent,var(--navy),transparent);background-size:200px 100%;animation:lb 1.4s infinite;flex-shrink:0;}
 @keyframes lb{from{background-position:-200px 0}to{background-position:calc(100% + 200px) 0}}
+
+/* ── EMPTY STATE ── */
+.empty-chat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px 30px;background:var(--bg);}
+.empty-chat svg{opacity:.15;}
+.empty-chat h3{font-size:22px;font-weight:600;color:var(--text2);}
+.empty-chat p{font-size:14px;color:var(--text3);text-align:center;line-height:1.7;max-width:260px;}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fIn .15s ease;}
+@media(min-width:680px){.overlay{align-items:center;}}
+@keyframes fIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:#fff;border-radius:24px 24px 0 0;
+  width:100%;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  animation:sUp .22s ease;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+@media(min-width:680px){.modal{border-radius:18px;width:560px;max-width:95vw;max-height:90dvh;}}
+@keyframes sUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* modal drag handle */
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
+.mhdr{padding:16px 20px 0;display:flex;justify-content:space-between;align-items:center;}
+.mtitle{font-size:20px;font-weight:700;color:var(--navy);}
+.mclose{width:30px;height:30px;border-radius:50%;border:none;background:var(--bg3);color:var(--text2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;font-weight:300;}
+.mbody{padding:16px 20px 24px;}
+
+.fsec{margin-bottom:18px;}
+.fsec-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--navy);margin-bottom:11px;font-weight:700;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px;}
+.frow.one{grid-template-columns:1fr;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.flabel{font-size:12px;color:var(--text2);font-weight:600;}
+.finput{
+  background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;
+  padding:11px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;
+  outline:none;width:100%;transition:border-color .15s;
+}
+.finput:focus{border-color:var(--navy);}
+.finput::placeholder{color:var(--text3);}
+select.finput{cursor:pointer;}
+.factions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+.fbtn{padding:12px 24px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.fbtn-navy{background:var(--navy);color:#fff;}
+.fbtn-ghost{background:var(--bg3);color:var(--text2);border:1.5px solid var(--border);}
+
+.srow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.stag{padding:9px 16px;border-radius:10px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:600;border:1.5px solid transparent;transition:all .15s;}
+
+.rem-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.rem-item{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:13px 15px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.rem-item.faded{opacity:.4;}
+
+/* toast */
+.toast{position:fixed;bottom:calc(100px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 22px;border-radius:50px;font-size:14px;z-index:999;white-space:nowrap;animation:sUp .2s ease;font-weight:600;box-shadow:0 4px 16px rgba(27,46,75,.3);}
 </style>
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-top">
-      <div class="brand">
-        <div class="brand-mark">
-          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        </div>
+
+  <!-- ── CONTACTS SCREEN ── -->
+  <div class="contacts-screen" id="contactsScreen">
+    <div class="contacts-hdr">
+      <div class="contacts-hdr-top">
         <div>
           <div class="brand-name">Deal CRM</div>
           <div class="brand-sub">Real Estate</div>
         </div>
+        <div class="hdr-actions">
+          <button class="hdr-icon-btn" onclick="openModal('intake')" title="Intake Form">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          </button>
+          <button class="hdr-icon-btn" onclick="openModal('addClient')" title="New Client">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="search">
+      <div class="search-wrap">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input id="searchInput" placeholder="Search clients…" oninput="filterClients()"/>
-      </div>
-      <div class="sbtn-row">
-        <button class="sbtn sbtn-navy" onclick="openModal('addClient')">+ New Client</button>
-        <button class="sbtn sbtn-outline" onclick="openModal('intake')">Intake Form</button>
       </div>
     </div>
     <div class="filter-row" id="filterRow"></div>
     <div class="clist" id="clientList"></div>
-  </aside>
+  </div>
 
-  <main class="main" id="main">
-    <div class="empty" id="emptyState">
-      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>
-      <h3>Select a client</h3>
-      <p>Choose a client from the list or create a new one to open their conversation.</p>
-    </div>
-
-    <div id="chatView" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
-      <div class="chat-hdr">
-        <div class="chat-hdr-l">
-          <span class="back-btn" onclick="goBack()">‹</span>
-          <div class="ava" id="hdrAva"></div>
-          <div class="hdr-info">
-            <div class="hdr-name" id="hdrName"></div>
-            <div class="hdr-sub" id="hdrSub"></div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-          <div class="hdr-chips" id="hdrChips"></div>
-          <div class="hdr-btns">
-            <button class="ibtn" id="remBtn" onclick="openModal('reminders')" title="Reminders">⏰</button>
-            <button class="ibtn" onclick="openModal('labels')" title="Labels">🏷</button>
-          </div>
-        </div>
+  <!-- ── CHAT SCREEN ── -->
+  <div class="chat-screen" id="chatScreen">
+    <!-- header -->
+    <div class="chat-hdr">
+      <span class="back-btn" onclick="goBack()">‹</span>
+      <div class="chat-ava" id="chatAva"></div>
+      <div class="chat-hdr-info">
+        <div class="chat-hdr-name" id="chatName"></div>
+        <div class="chat-hdr-sub" id="chatSub"></div>
       </div>
-      <div id="lbar" class="lbar" style="display:none;"></div>
-      <div class="chat-body" id="chatBody"></div>
-      <div class="input-area">
-        <div class="mode-row">
-          <button class="mtab on" id="tabNote" onclick="setMode('note')">Note</button>
-          <button class="mtab" id="tabAsk" onclick="setMode('ask')">Ask AI</button>
-        </div>
-        <div class="irow">
-          <textarea class="ibox" id="msgInput" rows="1"
-            placeholder="Write a note… or &quot;remind me to call Scott at 9am Saturday&quot;"
-            oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
-          <button class="send" onclick="sendMessage()">
-            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
-        </div>
-        <div class="hint" id="inputHint">Tip: type "remind me to…" and a reminder card will be created automatically.</div>
+      <div class="chat-hdr-right" id="chatHdrRight">
+        <!-- chips + icon btns injected here -->
       </div>
     </div>
-  </main>
+
+    <!-- empty or messages -->
+    <div class="empty-chat" id="emptyChat">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <h3>No messages yet</h3>
+      <p>Add a note or ask the AI a question about this client.</p>
+    </div>
+
+    <div id="lbar" class="lbar" style="display:none;"></div>
+    <div class="chat-body" id="chatBody" style="display:none;"></div>
+
+    <!-- input -->
+    <div class="input-area">
+      <div class="mode-row">
+        <button class="mtab on" id="tabNote" onclick="setMode('note')">Note</button>
+        <button class="mtab" id="tabAsk" onclick="setMode('ask')">Ask AI</button>
+      </div>
+      <div class="irow">
+        <textarea class="ibox" id="msgInput" rows="1"
+          placeholder="Write a note… or &quot;remind me to call Scott at 9am Saturday&quot;"
+          oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+        <button class="send" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="hint" id="inputHint">Tip: type "remind me to…" and a reminder card will be created automatically.</div>
+    </div>
+  </div>
 </div>
 
+<!-- MODALS -->
 <div id="modalOverlay" class="overlay" style="display:none;" onclick="overlayClick(event)">
   <div class="modal" id="modalBox"></div>
 </div>
 <div id="toast" class="toast" style="display:none;"></div>
 
 <script>
-// ── COLOR MAPS ────────────────────────────────────────────────────────────────
+// ── COLORS ────────────────────────────────────────────────────────────────────
 const TYPE_COLORS={
   "Buyer":             {bg:"#E6F0FA",text:"#1A3A6A",border:"#90B8E0"},
   "Seller":            {bg:"#E6F4EC",text:"#1A5A30",border:"#90C8A8"},
@@ -304,29 +401,29 @@ let clients=[
 
 let messages={
   c1:[
-    {id:"m1",clientId:"c1",type:"form",content:"c1",timestamp:D(2880),sender:"System"},
-    {id:"m2",clientId:"c1",type:"note",content:"Scott called — very motivated, wants to visit Tamarindo next month. His wife prefers something with a view. Has a pre-approval letter from his bank.",timestamp:D(2100),sender:"You"},
-    {id:"m3",clientId:"c1",type:"question",content:"Has Scott provided a budget and a flight date?",timestamp:D(1440),sender:"You"},
-    {id:"m4",clientId:"c1",type:"ai",content:"Yes — Scott's budget is $450,000–$600,000 and he has a bank pre-approval letter. For flight date, he hasn't confirmed exact dates yet, only that he plans to visit Tamarindo next month.",timestamp:D(1439),sender:"AI Assistant"},
-    {id:"m5",clientId:"c1",type:"note",content:"Sent him 3 property listings in Tamarindo Hills. Awaiting response.",timestamp:D(720),sender:"You"},
-    {id:"m6",clientId:"c1",type:"reminder",content:"r1",timestamp:D(60),sender:"You"},
+    {id:"m1",clientId:"c1",type:"form",content:"c1",timestamp:D(2880)},
+    {id:"m2",clientId:"c1",type:"note",content:"Scott called — very motivated, wants to visit Tamarindo next month. His wife prefers something with a view. Pre-approval letter confirmed.",timestamp:D(2100)},
+    {id:"m3",clientId:"c1",type:"question",content:"Has Scott provided a budget and a flight date?",timestamp:D(1440)},
+    {id:"m4",clientId:"c1",type:"ai",content:"Yes — Scott's budget is $450,000–$600,000 with a bank pre-approval. He hasn't confirmed exact flight dates yet, only that he plans to visit Tamarindo next month.",timestamp:D(1439)},
+    {id:"m5",clientId:"c1",type:"note",content:"Sent 3 listings in Tamarindo Hills. Awaiting response.",timestamp:D(720)},
+    {id:"m6",clientId:"c1",type:"reminder",content:"r1",timestamp:D(60)},
   ],
   c2:[
-    {id:"m10",clientId:"c2",type:"note",content:"María found us through Instagram. Looking for a long-term rental in Liberia, ideally near Escuela República Argentina.",timestamp:D(700),sender:"You"},
-    {id:"m11",clientId:"c2",type:"reminder",content:"r2",timestamp:D(600),sender:"You"},
+    {id:"m10",clientId:"c2",type:"note",content:"María found us through Instagram. Looking for a long-term rental in Liberia, near Escuela República Argentina.",timestamp:D(700)},
+    {id:"m11",clientId:"c2",type:"reminder",content:"r2",timestamp:D(600)},
   ],
   c3:[
-    {id:"m20",clientId:"c3",type:"form",content:"c3",timestamp:D(10080),sender:"System"},
-    {id:"m21",clientId:"c3",type:"note",content:"James is a tech exec relocating from San Francisco. Priya is a yoga instructor — wants space for a studio. Budget is flexible upward if the right property comes up.",timestamp:D(8640),sender:"You"},
-    {id:"m22",clientId:"c3",type:"question",content:"What are their must-haves vs nice-to-haves?",timestamp:D(4320),sender:"You"},
-    {id:"m23",clientId:"c3",type:"ai",content:"Must-haves: Ocean front, 5 bedrooms, 4 bathrooms, smart home, private road. Nice-to-haves: Staff quarters, infinity pool. Priya also wants space for a yoga studio — noted in the conversation but not on the form.",timestamp:D(4319),sender:"AI Assistant"},
+    {id:"m20",clientId:"c3",type:"form",content:"c3",timestamp:D(10080)},
+    {id:"m21",clientId:"c3",type:"note",content:"James is a tech exec relocating from San Francisco. Priya is a yoga instructor — wants studio space. Budget flexible upward.",timestamp:D(8640)},
+    {id:"m22",clientId:"c3",type:"question",content:"What are their must-haves vs nice-to-haves?",timestamp:D(4320)},
+    {id:"m23",clientId:"c3",type:"ai",content:"Must-haves: Ocean front, 5 bedrooms, 4 bathrooms, smart home, private road. Nice-to-haves: Staff quarters, infinity pool. Priya needs yoga studio space — noted in conversation, not on form.",timestamp:D(4319)},
   ],
   c4:[
-    {id:"m30",clientId:"c4",type:"note",content:"Roberto is looking for commercial space to expand his distribución business. On hold — waiting for a business partner decision.",timestamp:D(4300),sender:"You"},
-    {id:"m31",clientId:"c4",type:"reminder",content:"r3",timestamp:D(3000),sender:"You"},
+    {id:"m30",clientId:"c4",type:"note",content:"Looking for commercial space to expand distribución business. On hold — waiting for partner decision.",timestamp:D(4300)},
+    {id:"m31",clientId:"c4",type:"reminder",content:"r3",timestamp:D(3000)},
   ],
   c5:[
-    {id:"m40",clientId:"c5",type:"note",content:"Anika is Swedish, found us through a relocation blog. Interested in investment properties with rental income potential. Speaks excellent English.",timestamp:D(170),sender:"You"},
+    {id:"m40",clientId:"c5",type:"note",content:"Found us through a relocation blog. Interested in investment properties with rental income potential. Speaks excellent English.",timestamp:D(170)},
   ],
 };
 
@@ -336,38 +433,37 @@ let reminders={
   r3:{id:"r3",clientId:"c4",title:"Follow up with Roberto",dueDate:"Last Wednesday",dueTime:"3:00 PM",note:"Ask about partner decision status",done:true},
 };
 
-let selectedClientId=null, inputMode="note", currentFilter="All", isLoading=false;
+let selectedId=null, inputMode="note", currentFilter="All", isLoading=false;
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const ini=n=>(n||"?").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
 const fTime=ts=>ts?new Date(ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";
 const fRel=ts=>{
-  if(!ts)return"";
-  const m=Math.floor((Date.now()-new Date(ts))/60000);
+  if(!ts)return"";const m=Math.floor((Date.now()-new Date(ts))/60000);
   if(m<1)return"now";if(m<60)return m+"m";if(m<1440)return Math.floor(m/60)+"h";
   const d=Math.floor(m/1440);if(d<7)return d+"d";
   return new Date(ts).toLocaleDateString([],{month:"short",day:"numeric"});
 };
 const fDate=ts=>{
-  if(!ts)return"";
-  const d=new Date(ts),now=new Date(),diff=Math.floor((now-d)/86400000);
+  if(!ts)return"";const d=new Date(ts),now=new Date(),diff=Math.floor((now-d)/86400000);
   if(diff===0)return"Today";if(diff===1)return"Yesterday";
   if(diff<7)return d.toLocaleDateString([],{weekday:"long"});
   return d.toLocaleDateString([],{month:"short",day:"numeric"});
 };
-const chipStyle=(label,map)=>{
-  const c=map[label];
-  return c?`background:${c.bg};color:${c.text};border:1px solid ${c.border}`:"background:#F0F0F0;color:#606060;border:1px solid #D0D0D0";
-};
+const cs=(label,map)=>{const c=map[label];return c?`background:${c.bg};color:${c.text};border:1px solid ${c.border}`:"background:#F0F0F0;color:#606060;border:1px solid #D0D0D0";};
 const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
+
+// avatar background colors (cycle)
+const AVA_COLORS=["#1B3A6B","#1B5E3A","#6B1B3A","#3A1B6B","#1B4A5E","#5E3A1B"];
+const avaColor=id=>{let h=0;for(let c of(id||""))h=(h*31+c.charCodeAt(0))&0xFFFFFFFF;return AVA_COLORS[Math.abs(h)%AVA_COLORS.length];};
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 window.onload=()=>{buildFilters();renderClientList();};
 
 function buildFilters(){
-  const row=document.getElementById("filterRow");
-  row.innerHTML=["All",...CLIENT_TYPES,...CLIENT_STATUSES].map(f=>
-    `<button class="fpill${f===currentFilter?" on":""}" onclick="setFilter('${f}')">${f}</button>`).join("");
+  document.getElementById("filterRow").innerHTML=
+    ["All",...CLIENT_TYPES,...CLIENT_STATUSES].map(f=>
+      `<button class="fpill${f===currentFilter?" on":""}" onclick="setFilter('${f}')">${f}</button>`).join("");
 }
 function setFilter(f){currentFilter=f;buildFilters();renderClientList();}
 function filterClients(){renderClientList();}
@@ -382,54 +478,73 @@ function renderClientList(){
   });
   list.innerHTML=filtered.map(c=>{
     const pr=Object.values(reminders).filter(r=>r.clientId===c.id&&!r.done).length;
-    return `<div class="citem${c.id===selectedClientId?" sel":""}" onclick="selectClient('${c.id}')">
-      <div class="citem-name">${esc(c.fullName)}</div>
-      <div class="citem-sub">${esc(c.email||c.phone||"—")}</div>
-      <div class="citem-chips">
-        ${c.clientType?`<span class="chip" style="${chipStyle(c.clientType,TYPE_COLORS)}">${c.clientType}</span>`:""}
-        ${c.status?`<span class="chip" style="${chipStyle(c.status,STATUS_COLORS)}">${c.status}</span>`:""}
+    const color=avaColor(c.id);
+    const lastMsg=(messages[c.id]||[]).slice(-1)[0];
+    const preview=lastMsg?(lastMsg.type==="form"?"Intake form received":lastMsg.type==="reminder"?"⏰ Reminder set":lastMsg.content||""):"No messages yet";
+    return `<div class="citem${c.id===selectedId?" sel":""}" onclick="selectClient('${c.id}')">
+      <div class="citem-ava" style="background:${color}">${ini(c.fullName)}</div>
+      <div class="citem-body">
+        <div class="citem-row1">
+          <span class="citem-name">${esc(c.fullName)}</span>
+          <span class="citem-time">${fRel(c.createdAt)}</span>
+        </div>
+        <div class="citem-row2">
+          <span class="citem-sub">${esc(preview)}</span>
+          <div class="citem-badges">
+            ${pr>0?`<div class="rem-badge">⏰</div>`:""}
+          </div>
+        </div>
+        <div class="citem-chips">
+          ${c.clientType?`<span class="chip" style="${cs(c.clientType,TYPE_COLORS)}">${c.clientType}</span>`:""}
+          ${c.status?`<span class="chip" style="${cs(c.status,STATUS_COLORS)}">${c.status}</span>`:""}
+        </div>
       </div>
-      <div class="citem-time">${fRel(c.createdAt)}</div>
-      ${pr>0?`<div class="cbadge">⏰ ${pr}</div>`:""}
     </div>`;
-  }).join("")||`<div style="padding:26px;text-align:center;color:var(--text3);font-size:14px;">No clients found.</div>`;
+  }).join("")||`<div style="padding:30px;text-align:center;color:var(--text3);font-size:14px;">No clients found.</div>`;
 }
 
-// ── SELECT CLIENT ─────────────────────────────────────────────────────────────
+// ── SELECT / NAVIGATE ─────────────────────────────────────────────────────────
 function selectClient(id){
-  selectedClientId=id;
+  selectedId=id;
   const c=clients.find(x=>x.id===id);if(!c)return;
-  if(window.innerWidth<=640)document.getElementById("sidebar").classList.add("hidden");
-  document.getElementById("emptyState").style.display="none";
-  const cv=document.getElementById("chatView");cv.style.display="flex";
-  document.getElementById("hdrAva").textContent=ini(c.fullName);
-  document.getElementById("hdrName").textContent=c.fullName;
-  document.getElementById("hdrSub").textContent=[c.email,c.phone].filter(Boolean).join(" · ");
-  renderHdrChips(c);updateRemBtn();renderMessages();renderClientList();
+  // slide chat screen in
+  document.getElementById("chatScreen").classList.add("open");
+  // header
+  const color=avaColor(id);
+  document.getElementById("chatAva").textContent=ini(c.fullName);
+  document.getElementById("chatAva").style.background=color;
+  document.getElementById("chatName").textContent=c.fullName;
+  document.getElementById("chatSub").textContent=[c.email,c.phone].filter(Boolean).join(" · ");
+  // right side of header: chips + buttons
+  document.getElementById("chatHdrRight").innerHTML=`
+    <div style="display:flex;gap:5px;flex-wrap:nowrap;overflow:hidden;max-width:120px;">
+      ${c.clientType?`<span class="hdr-chip-sm" style="${cs(c.clientType,TYPE_COLORS)}">${c.clientType}</span>`:""}
+    </div>
+    <button class="chat-icon-btn" id="remBtn" onclick="openModal('reminders')">⏰<span id="remBadge"></span></button>
+    <button class="chat-icon-btn" onclick="openModal('labels')">🏷</button>`;
+  updateRemBtn();
+  renderMessages();
+  renderClientList();
 }
 
 function goBack(){
-  document.getElementById("sidebar").classList.remove("hidden");
-  document.getElementById("chatView").style.display="none";
-  document.getElementById("emptyState").style.display="flex";
-  selectedClientId=null;renderClientList();
-}
-
-function renderHdrChips(c){
-  document.getElementById("hdrChips").innerHTML=`
-    ${c.clientType?`<span class="chip" style="${chipStyle(c.clientType,TYPE_COLORS)};padding:4px 10px;border-radius:5px;font-size:12px;font-weight:600;">${c.clientType}</span>`:""}
-    ${c.status?`<span class="chip" style="${chipStyle(c.status,STATUS_COLORS)};padding:4px 10px;border-radius:5px;font-size:12px;font-weight:600;">${c.status}</span>`:""}`;
+  document.getElementById("chatScreen").classList.remove("open");
+  selectedId=null;renderClientList();
 }
 
 function updateRemBtn(){
-  const pr=Object.values(reminders).filter(r=>r.clientId===selectedClientId&&!r.done).length;
-  document.getElementById("remBtn").innerHTML=`⏰${pr>0?`<span class="ibadge">${pr}</span>`:""}`;
+  const pr=Object.values(reminders).filter(r=>r.clientId===selectedId&&!r.done).length;
+  const b=document.getElementById("remBadge");
+  if(b)b.outerHTML=pr>0?`<span class="ibadge" id="remBadge">${pr}</span>`:`<span id="remBadge"></span>`;
 }
 
 // ── MESSAGES ──────────────────────────────────────────────────────────────────
 function renderMessages(){
   const body=document.getElementById("chatBody");
-  const msgs=messages[selectedClientId]||[];
+  const empty=document.getElementById("emptyChat");
+  const msgs=messages[selectedId]||[];
+  if(msgs.length===0){body.style.display="none";empty.style.display="flex";return;}
+  empty.style.display="none";body.style.display="flex";
   let html="",lastDate=null;
   for(const m of msgs){
     const d=fDate(m.timestamp);
@@ -440,19 +555,13 @@ function renderMessages(){
 }
 
 function renderMsg(m){
-  // ── FORM CARD ──
   if(m.type==="form"){
-    // look up the client data stored in content (could be clientId or JSON string)
     let c={};
-    if(typeof m.content==="string"&&m.content.startsWith("{")){
-      try{c=JSON.parse(m.content);}catch(e){}
-    } else {
-      c=clients.find(x=>x.id===m.content)||clients.find(x=>x.id===selectedClientId)||{};
-    }
-    const row=(label,val)=>val&&val!=="—"?`<div><div class="ff-label">${label}</div><div class="ff-val">${esc(val)}</div></div>`:"";
-    const rowFull=(label,val)=>val&&val!=="—"?`<div class="ff-full"><div class="ff-label">${label}</div><div class="ff-val">${esc(val)}</div></div>`:"";
-    return `<div class="mw in">
-      <div class="mlabel">Intake Form</div>
+    if(typeof m.content==="string"&&m.content.startsWith("{")){try{c=JSON.parse(m.content);}catch(e){}}
+    else{c=clients.find(x=>x.id===m.content)||clients.find(x=>x.id===selectedId)||{};}
+    const row=(l,v)=>v&&v!=="—"?`<div><div class="ff-label">${l}</div><div class="ff-val">${esc(v)}</div></div>`:"";
+    const rowF=(l,v)=>v&&v!=="—"?`<div class="ff-full"><div class="ff-label">${l}</div><div class="ff-val">${esc(v)}</div></div>`:"";
+    return `<div class="mw in"><div class="mlabel">Intake Form</div>
       <div class="bubble form-card">
         <div class="form-card-hd">Property Request</div>
         <div class="form-grid">
@@ -460,14 +569,11 @@ function renderMsg(m){
           ${row("Location",c.preferredLocation)}${row("Bedrooms",c.bedrooms)}
           ${row("Bathrooms",c.bathrooms)}${row("Parking",c.parking)}
           ${row("Lot Size",c.lotSize)}${row("Construction",c.constructionSize)}
-          ${rowFull("Amenities",c.amenities)}
-          ${rowFull("Other Features / Comments",c.otherFeatures)}
+          ${rowF("Amenities",c.amenities)}${rowF("Other Features / Comments",c.otherFeatures)}
         </div>
       </div>
-      <div class="mtime">${fTime(m.timestamp)}</div>
-    </div>`;
+      <div class="mtime">${fTime(m.timestamp)}</div></div>`;
   }
-  // ── REMINDER ──
   if(m.type==="reminder"){
     const r=reminders[m.content]||{};const done=r.done||false;
     return `<div class="mw out">
@@ -479,84 +585,63 @@ function renderMsg(m){
           <button class="rem-btn${done?" done-btn":""}" onclick="${done?"":"markDone('"+r.id+"')"}">${done?"✓ Completed":"✓ Mark Done"}</button>
         </div>
       </div>
-      <div class="mtime">${fTime(m.timestamp)}</div>
-    </div>`;
+      <div class="mtime">${fTime(m.timestamp)}</div></div>`;
   }
-  // ── AI ──
-  if(m.type==="ai")return`<div class="mw in">
-    <div class="bubble ai"><div class="ai-tag">AI Assistant</div><div>${esc(m.content)}</div></div>
-    <div class="mtime">${fTime(m.timestamp)}</div>
-  </div>`;
-  // ── NOTE ──
-  if(m.type==="note")return`<div class="mw out">
-    <div class="bubble note">${esc(m.content)}</div>
-    <div class="mtime">${fTime(m.timestamp)}</div>
-  </div>`;
-  // ── QUESTION ──
-  if(m.type==="question")return`<div class="mw out">
-    <div class="bubble question">${esc(m.content)}</div>
-    <div class="mtime">${fTime(m.timestamp)}</div>
-  </div>`;
+  if(m.type==="ai")return`<div class="mw in"><div class="bubble ai"><div class="ai-tag">AI Assistant</div><div>${esc(m.content)}</div></div><div class="mtime">${fTime(m.timestamp)}</div></div>`;
+  if(m.type==="note")return`<div class="mw out"><div class="bubble note">${esc(m.content)}</div><div class="mtime">${fTime(m.timestamp)}</div></div>`;
+  if(m.type==="question")return`<div class="mw out"><div class="bubble question">${esc(m.content)}</div><div class="mtime">${fTime(m.timestamp)}</div></div>`;
   return"";
 }
 
 function appendMsg(m){
   const body=document.getElementById("chatBody");
+  const empty=document.getElementById("emptyChat");
+  empty.style.display="none";body.style.display="flex";
   body.insertAdjacentHTML("beforeend",renderMsg(m));
   body.scrollTop=body.scrollHeight;
 }
 
 // ── SEND ──────────────────────────────────────────────────────────────────────
-const REMINDER_SYSTEM=`You are a reminder parser for a real estate CRM.
-Determine if the user message is requesting a reminder (e.g. "remind me to call Scott at 9am Saturday", "set a reminder for Monday").
-If YES, return ONLY this JSON (no markdown, no backticks):
-{"isReminder":true,"title":"...","dueDate":"...","dueTime":"...","note":"..."}
+const REM_SYS=`You are a reminder parser for a real estate CRM.
+Determine if the user message is requesting a reminder (e.g. "remind me to call Scott at 9am Saturday").
+If YES, return ONLY this JSON (no markdown): {"isReminder":true,"title":"...","dueDate":"...","dueTime":"...","note":"..."}
 If NO, return ONLY: {"isReminder":false}
-Use natural language for dueDate (Saturday, Monday, Tomorrow, June 10).
-Use "9:00 AM" format for dueTime. If no time mentioned, use "".
-Title should be concise and action-oriented. Put extra context in note.`;
+dueDate: natural language (Saturday, Monday, Tomorrow, June 10). dueTime: "9:00 AM" format or "". Title: concise action. Extra context in note.`;
 
 async function sendMessage(){
-  const input=document.getElementById("msgInput");
-  const text=input.value.trim();
-  if(!text||!selectedClientId||isLoading)return;
-  input.value="";autoResize(input);
+  const inp=document.getElementById("msgInput");
+  const text=inp.value.trim();
+  if(!text||!selectedId||isLoading)return;
+  inp.value="";autoResize(inp);
 
   if(inputMode==="note"){
     setLoading(true);
     let parsed={isReminder:false};
-    try{
-      const raw=await callClaude(REMINDER_SYSTEM,text,200);
-      parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());
-    }catch(e){}
+    try{const raw=await callClaude(REM_SYS,text,200);parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());}catch(e){}
     setLoading(false);
-
     if(parsed.isReminder){
       const rid="r_"+Date.now();
-      const rem={id:rid,clientId:selectedClientId,title:parsed.title,dueDate:parsed.dueDate,dueTime:parsed.dueTime,note:parsed.note||"",done:false,createdAt:new Date().toISOString()};
+      const rem={id:rid,clientId:selectedId,title:parsed.title,dueDate:parsed.dueDate,dueTime:parsed.dueTime,note:parsed.note||"",done:false,createdAt:new Date().toISOString()};
       reminders[rid]=rem;
-      const msg={id:"m_"+Date.now(),clientId:selectedClientId,type:"reminder",content:rid,timestamp:new Date().toISOString(),sender:"You"};
-      if(!messages[selectedClientId])messages[selectedClientId]=[];
-      messages[selectedClientId].push(msg);
-      appendMsg(msg);updateRemBtn();renderClientList();
-      showToast("⏰ Reminder set");
+      const msg={id:"m_"+Date.now(),clientId:selectedId,type:"reminder",content:rid,timestamp:new Date().toISOString()};
+      if(!messages[selectedId])messages[selectedId]=[];
+      messages[selectedId].push(msg);appendMsg(msg);updateRemBtn();renderClientList();showToast("⏰ Reminder set");
     } else {
-      const msg={id:"m_"+Date.now(),clientId:selectedClientId,type:"note",content:text,timestamp:new Date().toISOString(),sender:"You"};
-      if(!messages[selectedClientId])messages[selectedClientId]=[];
-      messages[selectedClientId].push(msg);
-      appendMsg(msg);
+      const msg={id:"m_"+Date.now(),clientId:selectedId,type:"note",content:text,timestamp:new Date().toISOString()};
+      if(!messages[selectedId])messages[selectedId]=[];
+      messages[selectedId].push(msg);appendMsg(msg);renderClientList();
     }
   } else {
-    const qMsg={id:"m_"+Date.now(),clientId:selectedClientId,type:"question",content:text,timestamp:new Date().toISOString(),sender:"You"};
-    if(!messages[selectedClientId])messages[selectedClientId]=[];
-    messages[selectedClientId].push(qMsg);appendMsg(qMsg);
+    const qMsg={id:"m_"+Date.now(),clientId:selectedId,type:"question",content:text,timestamp:new Date().toISOString()};
+    if(!messages[selectedId])messages[selectedId]=[];
+    messages[selectedId].push(qMsg);appendMsg(qMsg);
     showTyping();
-    const c=clients.find(x=>x.id===selectedClientId)||{};
-    const history=(messages[selectedClientId]||[]).map(m=>`[${m.sender}]: ${m.type==="form"?"[Intake form submitted]":m.type==="reminder"?"[Reminder: "+(reminders[m.content]?.title||"")+" on "+(reminders[m.content]?.dueDate||"")+"]":m.content}`).join("\n");
-    const answer=await callClaude(`You are an intelligent real estate CRM assistant. Answer questions about this client based on their profile and conversation history. Be concise and accurate. If information is missing, say so clearly.`,`Client profile:\n${JSON.stringify(c,null,2)}\n\nConversation history:\n${history}\n\nQuestion: ${text}`);
+    const c=clients.find(x=>x.id===selectedId)||{};
+    const history=(messages[selectedId]||[]).map(m=>`[${m.type==="form"?"System":"You"}]: ${m.type==="form"?"[Intake form]":m.type==="reminder"?"[Reminder: "+(reminders[m.content]?.title||"")+" on "+(reminders[m.content]?.dueDate||"")+"]":m.content}`).join("\n");
+    const answer=await callClaude(`You are an intelligent real estate CRM assistant. Answer questions about this client based on their profile and history. Be concise and accurate.`,`Client:\n${JSON.stringify(c,null,2)}\n\nHistory:\n${history}\n\nQuestion: ${text}`);
     hideTyping();
-    const aMsg={id:"m_"+(Date.now()+1),clientId:selectedClientId,type:"ai",content:answer,timestamp:new Date().toISOString(),sender:"AI Assistant"};
-    messages[selectedClientId].push(aMsg);appendMsg(aMsg);
+    const aMsg={id:"m_"+(Date.now()+1),clientId:selectedId,type:"ai",content:answer,timestamp:new Date().toISOString()};
+    messages[selectedId].push(aMsg);appendMsg(aMsg);
   }
 }
 
@@ -564,8 +649,7 @@ async function callClaude(system,user,maxTokens=800){
   try{
     const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxTokens,system,messages:[{role:"user",content:user}]})});
-    const data=await res.json();
-    return data.content?.find(b=>b.type==="text")?.text||"";
+    const data=await res.json();return data.content?.find(b=>b.type==="text")?.text||"";
   }catch(e){return"Error: "+e.message;}
 }
 
@@ -600,55 +684,34 @@ function openModal(type){
 function closeModal(){document.getElementById("modalOverlay").style.display="none";document.getElementById("modalBox").innerHTML="";}
 function overlayClick(e){if(e.target===e.currentTarget)closeModal();}
 
-// ── CLIENT FORM ───────────────────────────────────────────────────────────────
 function clientFormHTML(btnLabel,submitFn,bilingual=false){
   const L=(en,es)=>bilingual?`${en} <em style="color:var(--text3);font-style:normal;font-size:11px;">/ ${es}</em>`:en;
   const ph=(en,es)=>bilingual?`${en} / ${es}`:en;
   const sel=(field,opts)=>`<select class="finput" id="f_${field}">${opts.map(o=>`<option>${o}</option>`).join("")}</select>`;
-  return `
+  return `<div class="modal-handle"></div>
   <div class="mhdr"><div class="mtitle">${bilingual?"Intake Form":"New Client"}</div><button class="mclose" onclick="closeModal()">×</button></div>
   <div class="mbody">
     ${bilingual?`<p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Share with your prospect. / Comparte con tu prospecto.</p>`:""}
-    <div class="fsec">
-      <div class="fsec-title">Contact</div>
-      <div class="frow">
-        <div class="fg"><label class="flabel">${L("Full Name","Nombre completo")}</label><input class="finput" id="f_fullName" placeholder="${ph("John Smith","Juan García")}"></div>
-        <div class="fg"><label class="flabel">${L("Email","Correo")}</label><input class="finput" id="f_email" type="email" placeholder="john@email.com"></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label class="flabel">${L("Phone","Teléfono")}</label><input class="finput" id="f_phone" type="tel" placeholder="+1 555 000"></div>
-        <div class="fg"><label class="flabel">${L("Budget","Presupuesto")}</label><input class="finput" id="f_budget" placeholder="${ph("$500,000","₡250,000,000")}"></div>
-      </div>
+    <div class="fsec"><div class="fsec-title">Contact</div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Full Name","Nombre completo")}</label><input class="finput" id="f_fullName" placeholder="${ph("John Smith","Juan García")}"></div>
+      <div class="fg"><label class="flabel">${L("Email","Correo")}</label><input class="finput" id="f_email" type="email" placeholder="john@email.com"></div></div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Phone","Teléfono")}</label><input class="finput" id="f_phone" type="tel" placeholder="+1 555 000"></div>
+      <div class="fg"><label class="flabel">${L("Budget","Presupuesto")}</label><input class="finput" id="f_budget" placeholder="${ph("$500,000","₡250M")}"></div></div>
     </div>
-    <div class="fsec">
-      <div class="fsec-title">Property Preferences</div>
-      <div class="frow">
-        <div class="fg"><label class="flabel">${L("Property Type","Tipo")}</label><input class="finput" id="f_propertyType" placeholder="${ph("House, Condo…","Casa, Apto…")}"></div>
-        <div class="fg"><label class="flabel">${L("Location","Ubicación")}</label><input class="finput" id="f_preferredLocation" placeholder="Tamarindo…"></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label class="flabel">${L("Bedrooms","Habitaciones")}</label><input class="finput" id="f_bedrooms" placeholder="3"></div>
-        <div class="fg"><label class="flabel">${L("Bathrooms","Baños")}</label><input class="finput" id="f_bathrooms" placeholder="2"></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label class="flabel">${L("Lot Size","Tamaño lote")}</label><input class="finput" id="f_lotSize" placeholder="500 m²"></div>
-        <div class="fg"><label class="flabel">${L("Construction","Construcción")}</label><input class="finput" id="f_constructionSize" placeholder="250 m²"></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label class="flabel">${L("Parking","Estacionamiento")}</label><input class="finput" id="f_parking" placeholder="2"></div>
-        <div></div>
-      </div>
-      <div class="frow one">
-        <div class="fg"><label class="flabel">${L("Amenities","Amenidades")}</label><input class="finput" id="f_amenities" placeholder="${ph("Pool, Gym…","Piscina, Gym…")}"></div>
-      </div>
-      <div class="frow one">
-        <div class="fg"><label class="flabel">${L("Other Features / Comments","Otras características / Comentarios")}</label><textarea class="finput" id="f_otherFeatures" rows="3" style="resize:none;" placeholder="${ph("Ocean view, any additional notes…","Vista al mar, notas adicionales…")}"></textarea></div>
-      </div>
+    <div class="fsec"><div class="fsec-title">Property</div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Property Type","Tipo")}</label><input class="finput" id="f_propertyType" placeholder="${ph("House, Condo…","Casa, Apto…")}"></div>
+      <div class="fg"><label class="flabel">${L("Location","Ubicación")}</label><input class="finput" id="f_preferredLocation" placeholder="Tamarindo…"></div></div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Bedrooms","Habitaciones")}</label><input class="finput" id="f_bedrooms" placeholder="3"></div>
+      <div class="fg"><label class="flabel">${L("Bathrooms","Baños")}</label><input class="finput" id="f_bathrooms" placeholder="2"></div></div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Lot Size","Lote")}</label><input class="finput" id="f_lotSize" placeholder="500 m²"></div>
+      <div class="fg"><label class="flabel">${L("Construction","Construcción")}</label><input class="finput" id="f_constructionSize" placeholder="250 m²"></div></div>
+      <div class="frow"><div class="fg"><label class="flabel">${L("Parking","Parqueo")}</label><input class="finput" id="f_parking" placeholder="2"></div><div></div></div>
+      <div class="frow one"><div class="fg"><label class="flabel">${L("Amenities","Amenidades")}</label><input class="finput" id="f_amenities" placeholder="${ph("Pool, Gym…","Piscina, Gym…")}"></div></div>
+      <div class="frow one"><div class="fg"><label class="flabel">${L("Other Features / Comments","Otras características / Comentarios")}</label><textarea class="finput" id="f_otherFeatures" rows="3" style="resize:none;" placeholder="${ph("Ocean view, notes…","Vista al mar, notas…")}"></textarea></div></div>
     </div>
-    <div class="fsec">
-      <div class="fsec-title">Classification</div>
+    <div class="fsec"><div class="fsec-title">Classification</div>
       <div class="frow">
-        <div class="fg"><label class="flabel">${L("Client Type","Tipo de cliente")}</label>${sel("clientType",CLIENT_TYPES)}</div>
+        <div class="fg"><label class="flabel">${L("Client Type","Tipo")}</label>${sel("clientType",CLIENT_TYPES)}</div>
         <div class="fg"><label class="flabel">${L("Status","Estado")}</label>${sel("status",CLIENT_STATUSES)}</div>
       </div>
     </div>
@@ -661,142 +724,104 @@ function clientFormHTML(btnLabel,submitFn,bilingual=false){
 
 function getFormData(){
   const fields=["fullName","email","phone","budget","propertyType","preferredLocation","bedrooms","bathrooms","lotSize","constructionSize","parking","amenities","otherFeatures","clientType","status"];
-  const d={};
-  fields.forEach(f=>{const el=document.getElementById("f_"+f);if(el)d[f]=el.value.trim();});
-  return d;
+  const d={};fields.forEach(f=>{const el=document.getElementById("f_"+f);if(el)d[f]=el.value.trim();});return d;
 }
-
-// FIX 5: New client — store full data object in the form message, not just the id
 function handleAddClient(){
   const d=getFormData();if(!d.fullName)return;
-  const id="c_"+Date.now();
-  const c={...d,id,createdAt:new Date().toISOString()};
+  const id="c_"+Date.now(),c={...d,id,createdAt:new Date().toISOString()};
   clients.unshift(c);
-
-  // Create a welcome/profile message showing their data
-  const profileMsg={id:"m_"+Date.now(),clientId:id,type:"form",content:JSON.stringify(c),timestamp:new Date().toISOString(),sender:"System"};
-  messages[id]=[profileMsg];
-
-  closeModal();selectClient(id);renderClientList();showToast("Client created");
+  const msg={id:"m_"+Date.now(),clientId:id,type:"form",content:JSON.stringify(c),timestamp:new Date().toISOString()};
+  messages[id]=[msg];closeModal();selectClient(id);renderClientList();showToast("Client created");
 }
-
-// FIX 5 (intake): Same — store full data in message content
 function handleIntake(){
   const d=getFormData();if(!d.fullName)return;
-  const id="c_"+Date.now();
-  const c={...d,id,createdAt:new Date().toISOString()};
-  const msg={id:"m_"+Date.now(),clientId:id,type:"form",content:JSON.stringify(c),timestamp:new Date().toISOString(),sender:"System"};
-  clients.unshift(c);messages[id]=[msg];
-  closeModal();selectClient(id);renderClientList();showToast("Intake submitted");
+  const id="c_"+Date.now(),c={...d,id,createdAt:new Date().toISOString()};
+  const msg={id:"m_"+Date.now(),clientId:id,type:"form",content:JSON.stringify(c),timestamp:new Date().toISOString()};
+  clients.unshift(c);messages[id]=[msg];closeModal();selectClient(id);renderClientList();showToast("Intake submitted");
 }
 
-// FIX 6: Reminder from form modal — allow natural language OR date picker
 function remindersHTML(){
-  const cRems=Object.values(reminders).filter(r=>r.clientId===selectedClientId);
+  const cRems=Object.values(reminders).filter(r=>r.clientId===selectedId);
   const items=cRems.length?cRems.map(r=>`
     <div class="rem-item${r.done?" faded":""}">
-      <div>
-        <div style="font-weight:600;color:var(--navy);font-size:14px;">${esc(r.title)}</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;color:var(--navy);font-size:15px;">${esc(r.title)}</div>
         <div style="font-size:13px;color:var(--text2);margin-top:3px;">${esc(r.dueDate)}${r.dueTime?" · "+esc(r.dueTime):""}</div>
         ${r.note?`<div style="font-size:13px;color:var(--text);margin-top:5px;">${esc(r.note)}</div>`:""}
       </div>
-      ${!r.done?`<button class="rem-btn" onclick="markDoneFromModal('${r.id}')">✓ Done</button>`:`<button class="rem-btn done-btn">✓ Done</button>`}
-    </div>`).join(""):`<p style="color:var(--text3);font-size:14px;margin-bottom:14px;">No reminders yet.</p>`;
-  return `<div class="mhdr"><div class="mtitle">⏰ Reminders</div><button class="mclose" onclick="closeModal()">×</button></div>
-  <div class="mbody"><div class="rem-list">${items}</div><button class="fbtn fbtn-navy" style="width:100%;" onclick="openModal('remForm')">+ Add Reminder</button></div>`;
+      ${!r.done?`<button class="rem-btn" onclick="markDoneFromModal('${r.id}')">✓ Done</button>`:`<button class="rem-btn done-btn">✓</button>`}
+    </div>`).join(""):`<p style="color:var(--text3);font-size:14px;margin-bottom:16px;">No reminders yet.</p>`;
+  return `<div class="modal-handle"></div>
+  <div class="mhdr"><div class="mtitle">⏰ Reminders</div><button class="mclose" onclick="closeModal()">×</button></div>
+  <div class="mbody"><div class="rem-list">${items}</div>
+  <button class="fbtn fbtn-navy" style="width:100%;" onclick="openModal('remForm')">+ Add Reminder</button></div>`;
 }
-
-function markDoneFromModal(rid){if(reminders[rid])reminders[rid].done=true;renderMessages();updateRemBtn();renderClientList();openModal('reminders');}
+function markDoneFromModal(rid){if(reminders[rid])reminders[rid].done=true;renderMessages();updateRemBtn();renderClientList();openModal("reminders");}
 
 function reminderFormHTML(){
-  return `<div class="mhdr"><div class="mtitle">⏰ New Reminder</div><button class="mclose" onclick="closeModal()">×</button></div>
+  return `<div class="modal-handle"></div>
+  <div class="mhdr"><div class="mtitle">⏰ New Reminder</div><button class="mclose" onclick="closeModal()">×</button></div>
   <div class="mbody">
-    <div class="fg" style="margin-bottom:13px;">
-      <label class="flabel">Title *</label>
-      <input class="finput" id="rf_title" placeholder="e.g. Follow up on budget" style="margin-top:5px;">
-    </div>
+    <div class="fg" style="margin-bottom:13px;"><label class="flabel">Title *</label><input class="finput" id="rf_title" placeholder="e.g. Follow up on budget" style="margin-top:5px;"></div>
     <div class="frow" style="margin-bottom:13px;">
-      <div class="fg">
-        <label class="flabel">Date *</label>
-        <input class="finput" id="rf_date" placeholder="e.g. Saturday, June 10…" style="margin-top:5px;">
-      </div>
-      <div class="fg">
-        <label class="flabel">Time</label>
-        <input class="finput" id="rf_time" placeholder="e.g. 9:00 AM" style="margin-top:5px;">
-      </div>
+      <div class="fg"><label class="flabel">Date *</label><input class="finput" id="rf_date" placeholder="Saturday, June 10…" style="margin-top:5px;"></div>
+      <div class="fg"><label class="flabel">Time</label><input class="finput" id="rf_time" placeholder="9:00 AM" style="margin-top:5px;"></div>
     </div>
-    <div class="fg" style="margin-bottom:16px;">
-      <label class="flabel">Note (optional)</label>
-      <textarea class="finput" id="rf_note" rows="3" style="margin-top:5px;resize:none;" placeholder="Additional context…"></textarea>
-    </div>
-    <div id="rf_error" style="color:#B00;font-size:13px;margin-bottom:10px;display:none;">Please fill in Title and Date.</div>
+    <div class="fg" style="margin-bottom:16px;"><label class="flabel">Note (optional)</label><textarea class="finput" id="rf_note" rows="3" style="margin-top:5px;resize:none;" placeholder="Additional context…"></textarea></div>
+    <div id="rf_error" style="color:#C00;font-size:13px;margin-bottom:10px;display:none;">Please fill in Title and Date.</div>
     <div class="factions">
       <button class="fbtn fbtn-ghost" onclick="openModal('reminders')">Back</button>
       <button class="fbtn fbtn-navy" onclick="saveReminder()">Add Reminder</button>
     </div>
   </div>`;
 }
-
-// FIX 6: saveReminder — validates, creates reminder, posts to chat, closes modal
 function saveReminder(){
-  const titleEl=document.getElementById("rf_title");
-  const dateEl=document.getElementById("rf_date");
-  const timeEl=document.getElementById("rf_time");
-  const noteEl=document.getElementById("rf_note");
-  const errEl=document.getElementById("rf_error");
-
-  const title=(titleEl?.value||"").trim();
-  const dueDate=(dateEl?.value||"").trim();
-  const dueTime=(timeEl?.value||"").trim();
-  const note=(noteEl?.value||"").trim();
-
-  if(!title||!dueDate){
-    if(errEl)errEl.style.display="block";
-    return;
-  }
-
+  const title=(document.getElementById("rf_title")?.value||"").trim();
+  const dueDate=(document.getElementById("rf_date")?.value||"").trim();
+  const dueTime=(document.getElementById("rf_time")?.value||"").trim();
+  const note=(document.getElementById("rf_note")?.value||"").trim();
+  if(!title||!dueDate){const e=document.getElementById("rf_error");if(e)e.style.display="block";return;}
   const rid="r_"+Date.now();
-  const rem={id:rid,clientId:selectedClientId,title,dueDate,dueTime,note,done:false,createdAt:new Date().toISOString()};
-  reminders[rid]=rem;
-
-  const msg={id:"m_"+(Date.now()+1),clientId:selectedClientId,type:"reminder",content:rid,timestamp:new Date().toISOString(),sender:"You"};
-  if(!messages[selectedClientId])messages[selectedClientId]=[];
-  messages[selectedClientId].push(msg);
-
-  closeModal();
-  appendMsg(msg);
-  updateRemBtn();
-  renderClientList();
-  showToast("⏰ Reminder added");
+  reminders[rid]={id:rid,clientId:selectedId,title,dueDate,dueTime,note,done:false,createdAt:new Date().toISOString()};
+  const msg={id:"m_"+(Date.now()+1),clientId:selectedId,type:"reminder",content:rid,timestamp:new Date().toISOString()};
+  if(!messages[selectedId])messages[selectedId]=[];
+  messages[selectedId].push(msg);
+  closeModal();appendMsg(msg);updateRemBtn();renderClientList();showToast("⏰ Reminder added");
 }
 
-// ── LABELS ────────────────────────────────────────────────────────────────────
 function labelsHTML(){
-  const c=clients.find(x=>x.id===selectedClientId)||{};
+  const c=clients.find(x=>x.id===selectedId)||{};
   const typeBtns=CLIENT_TYPES.map(t=>{
-    const cs=TYPE_COLORS[t]||{bg:"#F0F0F0",text:"#606060",border:"#D0D0D0"};
+    const col=TYPE_COLORS[t]||{bg:"#F0F0F0",text:"#606060",border:"#D0D0D0"};
     const sel=c.clientType===t;
-    return `<button class="stag" onclick="setLabel('clientType','${t}')" style="background:${sel?cs.bg:"#F5F5F5"};color:${sel?cs.text:"#909090"};border:1px solid ${sel?cs.border:"#E0E0E0"};">${t}</button>`;
+    return `<button class="stag" onclick="setLabel('clientType','${t}')" style="background:${sel?col.bg:"#F5F5F5"};color:${sel?col.text:"#909090"};border-color:${sel?col.border:"#E0E0E0"};">${t}</button>`;
   }).join("");
   const statBtns=CLIENT_STATUSES.map(s=>{
-    const cs=STATUS_COLORS[s]||{bg:"#F0F0F0",text:"#606060",border:"#D0D0D0"};
+    const col=STATUS_COLORS[s]||{bg:"#F0F0F0",text:"#606060",border:"#D0D0D0"};
     const sel=c.status===s;
-    return `<button class="stag" onclick="setLabel('status','${s}')" style="background:${sel?cs.bg:"#F5F5F5"};color:${sel?cs.text:"#909090"};border:1px solid ${sel?cs.border:"#E0E0E0"};">${s}</button>`;
+    return `<button class="stag" onclick="setLabel('status','${s}')" style="background:${sel?col.bg:"#F5F5F5"};color:${sel?col.text:"#909090"};border-color:${sel?col.border:"#E0E0E0"};">${s}</button>`;
   }).join("");
-  return `<div class="mhdr"><div class="mtitle">🏷 Labels</div><button class="mclose" onclick="closeModal()">×</button></div>
+  return `<div class="modal-handle"></div>
+  <div class="mhdr"><div class="mtitle">🏷 Labels</div><button class="mclose" onclick="closeModal()">×</button></div>
   <div class="mbody">
     <div style="margin-bottom:22px;"><div class="fsec-title">Client Type</div><div class="srow">${typeBtns}</div></div>
     <div><div class="fsec-title">Status</div><div class="srow">${statBtns}</div></div>
     <div class="factions"><button class="fbtn fbtn-navy" onclick="closeModal()">Done</button></div>
   </div>`;
 }
-
 function setLabel(field,val){
-  const c=clients.find(x=>x.id===selectedClientId);if(!c)return;
-  c[field]=val;renderHdrChips(c);renderClientList();openModal("labels");
+  const c=clients.find(x=>x.id===selectedId);if(!c)return;
+  c[field]=val;
+  // update header chip
+  const right=document.getElementById("chatHdrRight");
+  if(right&&field==="clientType"){
+    const col=TYPE_COLORS[val]||{bg:"rgba(255,255,255,.2)",text:"#fff",border:"transparent"};
+    const chip=right.querySelector(".hdr-chip-sm");
+    if(chip){chip.textContent=val;chip.style.cssText=cs(val,TYPE_COLORS);}
+  }
+  renderClientList();openModal("labels");
 }
 
-// ── TOAST ─────────────────────────────────────────────────────────────────────
 function showToast(msg){
   const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";
   setTimeout(()=>t.style.display="none",2800);
