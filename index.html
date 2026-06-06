@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -346,14 +347,15 @@ const CLIENT_STATUSES=["New Lead","In Progress","On Hold","Closed","Lost"];
 const AVA_COLORS=["#1B3A6B","#1B5E3A","#6B1B3A","#3A1B6B","#1B4A5E","#5E3A1B"];
 const avaColor=id=>{let h=0;for(let c of(id||""))h=(h*31+c.charCodeAt(0))&0xFFFFFFFF;return AVA_COLORS[Math.abs(h)%AVA_COLORS.length];};
 
-// ── DATA — one example only ───────────────────────────────────────────────────
+// ── DATA — localStorage persistence ──────────────────────────────────────────
 const NOW=Date.now();
 const D=m=>new Date(NOW-m*60000).toISOString();
 
-let clients=[
+// Default sample data (only used if localStorage is empty)
+const DEFAULT_CLIENTS=[
   {id:"c1",fullName:"Scott Mitchell",email:"scott.mitchell@gmail.com",phone:"+1 305 844 2201",budget:"$450,000–$600,000",propertyType:"House",preferredLocation:"Tamarindo, Guanacaste",bedrooms:"3",bathrooms:"2.5",lotSize:"600 m²",constructionSize:"280 m²",parking:"2",amenities:"Pool, Ocean view, Gated community",otherFeatures:"Home office. Pre-approval letter confirmed.",clientType:"Buyer",status:"In Progress",createdAt:D(2880)},
 ];
-let messages={
+const DEFAULT_MESSAGES={
   c1:[
     {id:"m1",clientId:"c1",type:"form",content:"c1",timestamp:D(2880)},
     {id:"m2",clientId:"c1",type:"note",content:"Scott called — very motivated, wants to visit Tamarindo next month. His wife prefers something with a view.",timestamp:D(2100)},
@@ -362,9 +364,39 @@ let messages={
     {id:"m5",clientId:"c1",type:"reminder",content:"r1",timestamp:D(60)},
   ],
 };
-let reminders={
+const DEFAULT_REMINDERS={
   r1:{id:"r1",clientId:"c1",title:"Call Scott",dueDate:"Saturday",dueTime:"9:00 AM",note:"Check if he reviewed the Tamarindo Hills listings",done:false},
 };
+
+// Load from localStorage or fall back to defaults
+function loadData(){
+  try{
+    const sc=localStorage.getItem("dealcrm_clients");
+    const sm=localStorage.getItem("dealcrm_messages");
+    const sr=localStorage.getItem("dealcrm_reminders");
+    return {
+      clients: sc ? JSON.parse(sc) : DEFAULT_CLIENTS,
+      messages: sm ? JSON.parse(sm) : DEFAULT_MESSAGES,
+      reminders: sr ? JSON.parse(sr) : DEFAULT_REMINDERS,
+    };
+  }catch(e){
+    return {clients:DEFAULT_CLIENTS,messages:DEFAULT_MESSAGES,reminders:DEFAULT_REMINDERS};
+  }
+}
+
+// Save everything to localStorage
+function saveData(){
+  try{
+    localStorage.setItem("dealcrm_clients", JSON.stringify(clients));
+    localStorage.setItem("dealcrm_messages", JSON.stringify(messages));
+    localStorage.setItem("dealcrm_reminders", JSON.stringify(reminders));
+  }catch(e){console.warn("Storage full:",e);}
+}
+
+const _loaded = loadData();
+let clients   = _loaded.clients;
+let messages  = _loaded.messages;
+let reminders = _loaded.reminders;
 
 let selectedId=null,inputMode="note",currentFilter="All",isLoading=false,infoPanelOpen=false;
 
@@ -441,6 +473,7 @@ function checkReminders(){
     };
     if(!messages[r.clientId]) messages[r.clientId]=[];
     messages[r.clientId].push(alertMsg);
+    saveData();
 
     // if this client is currently open, append it live
     if(selectedId===r.clientId){
@@ -574,7 +607,7 @@ function deleteClient(id){
   delete messages[id];
   Object.keys(reminders).forEach(k=>{if(reminders[k].clientId===id)delete reminders[k];});
   if(selectedId===id){goBack();}
-  closeModal();renderClientList();showToast("Client deleted");
+  saveData();closeModal();renderClientList();showToast("Client deleted");
 }
 
 // ── SELECT / NAVIGATE ─────────────────────────────────────────────────────────
@@ -790,11 +823,11 @@ async function sendMessage(){
       reminders[rid]={id:rid,clientId:selectedId,title:parsed.title,dueDate:parsed.dueDate||"",dueTime:parsed.dueTime||"",note:parsed.note||"",done:false,createdAt:new Date().toISOString()};
       const msg={id:"m_"+Date.now(),clientId:selectedId,type:"reminder",content:rid,timestamp:new Date().toISOString()};
       if(!messages[selectedId])messages[selectedId]=[];
-      messages[selectedId].push(msg);appendMsg(msg);updateRemBtn();renderClientList();showToast("⏰ Reminder set");
+      messages[selectedId].push(msg);saveData();appendMsg(msg);updateRemBtn();renderClientList();showToast("⏰ Reminder set");
     } else {
       const msg={id:"m_"+Date.now(),clientId:selectedId,type:"note",content:text,timestamp:new Date().toISOString()};
       if(!messages[selectedId])messages[selectedId]=[];
-      messages[selectedId].push(msg);appendMsg(msg);renderClientList();
+      messages[selectedId].push(msg);saveData();appendMsg(msg);renderClientList();
     }
   } else {
     const qMsg={id:"m_"+Date.now(),clientId:selectedId,type:"question",content:text,timestamp:new Date().toISOString()};
@@ -806,7 +839,7 @@ async function sendMessage(){
     const answer=await callClaude(`You are an intelligent real estate CRM assistant. Answer questions about this client based on their profile and history. Be concise and accurate.`,`Client:\n${JSON.stringify(c,null,2)}\n\nHistory:\n${history}\n\nQuestion: ${text}`);
     hideTyping();
     const aMsg={id:"m_"+(Date.now()+1),clientId:selectedId,type:"ai",content:answer,timestamp:new Date().toISOString()};
-    messages[selectedId].push(aMsg);appendMsg(aMsg);
+    messages[selectedId].push(aMsg);saveData();appendMsg(aMsg);
   }
 }
 
@@ -833,7 +866,7 @@ function setMode(m){
 }
 function handleKey(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}}
 function autoResize(el){el.style.height="auto";el.style.height=Math.min(el.scrollHeight,110)+"px";}
-function markDone(rid){if(reminders[rid])reminders[rid].done=true;renderMessages();updateRemBtn();renderClientList();}
+function markDone(rid){if(reminders[rid])reminders[rid].done=true;saveData();renderMessages();updateRemBtn();renderClientList();}
 
 // ── MODALS ────────────────────────────────────────────────────────────────────
 function openModal(type,payload){
@@ -917,13 +950,13 @@ function handleAddClient(){
   const id="c_"+Date.now(),c={...d,id,createdAt:new Date().toISOString()};
   clients.unshift(c);
   const msg={id:"m_"+Date.now(),clientId:id,type:"form",content:JSON.stringify(c),timestamp:new Date().toISOString()};
-  messages[id]=[msg];closeModal();selectClient(id);renderClientList();showToast("Client created");
+  messages[id]=[msg];saveData();closeModal();selectClient(id);renderClientList();showToast("Client created");
 }
 function handleIntake(){
   const d=getFormData();if(!d.fullName)return;
   const id="c_"+Date.now(),c={...d,id,createdAt:new Date().toISOString()};
   const msg={id:"m_"+Date.now(),clientId:id,type:"form",content:JSON.stringify(c),timestamp:new Date().toISOString()};
-  clients.unshift(c);messages[id]=[msg];closeModal();selectClient(id);renderClientList();showToast("Intake submitted");
+  clients.unshift(c);messages[id]=[msg];saveData();closeModal();selectClient(id);renderClientList();showToast("Intake submitted");
 }
 
 // ── REMINDERS ─────────────────────────────────────────────────────────────────
@@ -943,7 +976,7 @@ function remindersHTML(){
   <div class="mbody"><div class="rem-list">${items}</div>
   <button class="fbtn fbtn-navy" style="width:100%;" onclick="openModal('remForm')">+ Add Reminder</button></div>`;
 }
-function markDoneFromModal(rid){if(reminders[rid])reminders[rid].done=true;renderMessages();updateRemBtn();renderClientList();openModal("reminders");}
+function markDoneFromModal(rid){if(reminders[rid])reminders[rid].done=true;saveData();renderMessages();updateRemBtn();renderClientList();openModal("reminders");}
 
 function reminderFormHTML(){
   return `<div class="modal-handle"></div>
@@ -973,7 +1006,7 @@ function saveReminder(){
   const msg={id:"m_"+(Date.now()+1),clientId:selectedId,type:"reminder",content:rid,timestamp:new Date().toISOString()};
   if(!messages[selectedId])messages[selectedId]=[];
   messages[selectedId].push(msg);
-  closeModal();appendMsg(msg);updateRemBtn();renderClientList();showToast("⏰ Reminder added");
+  saveData();closeModal();appendMsg(msg);updateRemBtn();renderClientList();showToast("⏰ Reminder added");
 }
 
 // ── LABELS ────────────────────────────────────────────────────────────────────
@@ -999,7 +1032,7 @@ function labelsHTML(){
 }
 function setLabel(field,val){
   const c=clients.find(x=>x.id===selectedId);if(!c)return;
-  c[field]=val;renderClientList();openModal("labels");
+  c[field]=val;saveData();renderClientList();openModal("labels");
 }
 
 function showToast(msg){
