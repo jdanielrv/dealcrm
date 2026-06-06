@@ -387,6 +387,9 @@ async function initAuth() {
 function showLogin() {
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loginBtn').textContent = 'Sign In';
+  document.getElementById('loginError').textContent = '';
   setTimeout(() => document.getElementById('loginEmail').focus(), 200);
 }
 
