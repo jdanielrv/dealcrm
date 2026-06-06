@@ -250,10 +250,48 @@ select.finput{cursor:pointer;}
 
 /* toast */
 .toast{position:fixed;bottom:calc(100px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 22px;border-radius:50px;font-size:14px;z-index:999;white-space:nowrap;animation:sUp .2s ease;font-weight:600;box-shadow:0 4px 16px rgba(27,46,75,.3);}
+
+/* ── LOGIN SCREEN ── */
+.login-screen{
+  position:fixed;inset:0;background:#0a2e0a;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9000;padding:32px 28px;
+  background-image:radial-gradient(circle at 20% 20%,rgba(255,255,255,.04) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(255,255,255,.03) 0%,transparent 50%);
+}
+.login-screen.hidden{display:none;}
+.login-logo{width:72px;height:72px;border-radius:18px;object-fit:cover;box-shadow:0 8px 32px rgba(0,0,0,.4);margin-bottom:24px;}
+.login-brand{font-size:32px;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:6px;}
+.login-tagline{font-size:14px;color:rgba(255,255,255,.5);letter-spacing:.6px;text-transform:uppercase;margin-bottom:48px;}
+.login-card{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+.login-label{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:block;}
+.login-input{width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;padding:13px 15px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);outline:none;transition:border-color .15s;box-sizing:border-box;margin-bottom:16px;}
+.login-input:focus{border-color:#0a2e0a;}
+.login-input::placeholder{color:var(--text3);}
+.login-btn{width:100%;background:#0a2e0a;color:#fff;border:none;border-radius:12px;padding:15px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.2px;transition:opacity .15s;margin-top:4px;}
+.login-btn:active{opacity:.8;}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;}
+.login-error{font-size:13px;color:var(--red);text-align:center;margin-top:12px;min-height:18px;font-weight:500;}
+.login-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="app">
+<div id="loginScreen" class="login-screen">
+  <img class="login-logo" src="data:image/jpeg;base64,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" alt="deal." />
+  <div class="login-brand">deal.</div>
+  <div class="login-tagline">Real Estate CRM</div>
+  <div class="login-card">
+    <label class="login-label" for="loginEmail">Email</label>
+    <input class="login-input" id="loginEmail" type="email" placeholder="tu@email.com" autocomplete="email" autocapitalize="none" />
+    <label class="login-label" for="loginPassword">Password</label>
+    <input class="login-input" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div class="app" id="mainApp" style="display:none;">
 
   <!-- ── CONTACTS SCREEN ── -->
   <div class="contacts-screen" id="contactsScreen">
@@ -324,6 +362,85 @@ select.finput{cursor:pointer;}
   <div class="modal" id="modalBox"></div>
 </div>
 <div id="toast" class="toast" style="display:none;"></div>
+</div><!-- /mainApp -->
+
+<script>
+// ── SUPABASE ──────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://qhwsqwdurqreoeymdzuj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFod3Nxd2R1cnFyZW9leW1kenVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTM0MDIsImV4cCI6MjA5NjMyOTQwMn0.V75ZEUlrFzHSODsJ29U07Lod3uwugXKPmQ_kjF4487k';
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+
+async function initAuth() {
+  const { data: { session } } = await supa.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    showApp();
+  } else {
+    showLogin();
+  }
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('mainApp').style.display = 'none';
+  setTimeout(() => document.getElementById('loginEmail').focus(), 200);
+}
+
+function showApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainApp').style.display = 'flex';
+  initApp();
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const errEl = document.getElementById('loginError');
+
+  if (!email || !password) { errEl.textContent = 'Please enter your email and password.'; return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="login-spinner"></span>Signing in…';
+  errEl.textContent = '';
+
+  const { data, error } = await supa.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    errEl.textContent = error.message === 'Invalid login credentials'
+      ? 'Incorrect email or password.'
+      : error.message;
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+    return;
+  }
+
+  currentUser = data.user;
+  showApp();
+}
+
+// Allow Enter key on password field
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('loginEmail').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+  });
+  initAuth();
+});
+
+function initApp() {
+  // App initialization — called after login
+  renderFilters();
+  renderClientList();
+  initSwipe();
+  startReminderChecker();
+  checkReminders();
+}
+</script>
 
 <script>
 // ── COLORS ────────────────────────────────────────────────────────────────────
@@ -506,9 +623,10 @@ function requestNotifPermission(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-window.onload=()=>{buildFilters();renderClientList();initSwipe();startReminderChecker();};
+// Initialization is handled by initApp() called after login.
 
-function buildFilters(){
+function buildFilters(){renderFilters();}
+function renderFilters(){
   document.getElementById("filterRow").innerHTML=
     ["All",...CLIENT_TYPES,...CLIENT_STATUSES].map(f=>
       `<button class="fpill${f===currentFilter?" on":""}" onclick="setFilter('${f}')">${f}</button>`).join("");
