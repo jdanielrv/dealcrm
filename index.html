@@ -386,8 +386,94 @@ const fDate=ts=>{
 const cs=(l,map)=>{const c=map[l];return c?`background:${c.bg};color:${c.text};border:1px solid ${c.border}`:"background:#F0F0F0;color:#606060;border:1px solid #D0D0D0";};
 const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
 
+// ── REMINDER FIRE CHECKER ─────────────────────────────────────────────────────
+// Checks every minute if any reminder is due and posts an alert message to chat
+const firedReminders = new Set(); // track which ones already fired this session
+
+function startReminderChecker(){
+  checkReminders(); // run once immediately
+  setInterval(checkReminders, 60000); // then every 60 seconds
+}
+
+function checkReminders(){
+  const now = new Date();
+  const todayName = now.toLocaleDateString([],{weekday:"long"}).toLowerCase();
+  const todayDate = now.toLocaleDateString([],{month:"long",day:"numeric"}).toLowerCase();
+  const todayShort = now.toLocaleDateString([],{month:"short",day:"numeric"}).toLowerCase();
+
+  Object.values(reminders).forEach(r => {
+    if(r.done || firedReminders.has(r.id)) return;
+
+    // check if today matches the reminder's dueDate
+    const rd = (r.dueDate||"").toLowerCase();
+    const isToday = rd === "today" || rd === "hoy"
+      || rd === todayName
+      || rd.includes(todayDate)
+      || rd.includes(todayShort)
+      || rd.includes(now.toLocaleDateString([],{month:"numeric",day:"numeric"}));
+    if(!isToday) return;
+
+    // check if the time has arrived (or no time set — fire at start of day)
+    let timeDue = true;
+    if(r.dueTime){
+      const match = r.dueTime.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
+      if(match){
+        let h = parseInt(match[1]);
+        const m = parseInt(match[2]||"0");
+        const ampm = (match[3]||"").toUpperCase();
+        if(ampm==="PM" && h!==12) h+=12;
+        if(ampm==="AM" && h===12) h=0;
+        const dueMinutes = h*60+m;
+        const nowMinutes = now.getHours()*60+now.getMinutes();
+        timeDue = nowMinutes >= dueMinutes;
+      }
+    }
+    if(!timeDue) return;
+
+    // fire the reminder — post a system alert message in that client's chat
+    firedReminders.add(r.id);
+    const alertMsg = {
+      id:"m_fired_"+Date.now(),
+      clientId:r.clientId,
+      type:"reminder_alert",
+      content:r.id,
+      timestamp:new Date().toISOString()
+    };
+    if(!messages[r.clientId]) messages[r.clientId]=[];
+    messages[r.clientId].push(alertMsg);
+
+    // if this client is currently open, append it live
+    if(selectedId===r.clientId){
+      appendMsg(alertMsg);
+    }
+
+    // update sidebar badge and show toast
+    renderClientList();
+    if(selectedId===r.clientId) updateRemBtn();
+
+    // show toast even if the chat is not open
+    const c = clients.find(x=>x.id===r.clientId);
+    showToast(`⏰ ${r.title}${c?" — "+c.fullName:""}`);
+
+    // browser notification if granted
+    if(Notification.permission==="granted"){
+      new Notification("Deal CRM — Reminder", {
+        body: `${r.title}${c?" · "+c.fullName:""}`,
+        icon: ""
+      });
+    }
+  });
+}
+
+// request notification permission on load (user must have interacted first)
+function requestNotifPermission(){
+  if("Notification" in window && Notification.permission==="default"){
+    Notification.requestPermission();
+  }
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
-window.onload=()=>{buildFilters();renderClientList();initSwipe();};
+window.onload=()=>{buildFilters();renderClientList();initSwipe();startReminderChecker();};
 
 function buildFilters(){
   document.getElementById("filterRow").innerHTML=
@@ -494,6 +580,7 @@ function deleteClient(id){
 // ── SELECT / NAVIGATE ─────────────────────────────────────────────────────────
 function selectClient(id){
   resetSwipe();
+  requestNotifPermission();
   selectedId=id;
   const c=clients.find(x=>x.id===id);if(!c)return;
   document.getElementById("chatScreen").classList.add("open");
@@ -604,6 +691,20 @@ function renderMsg(m){
         <div class="rem-actions"><button class="rem-btn${done?" done-btn":""}" onclick="${done?"":"markDone('"+r.id+"')"}">${done?"✓ Completed":"✓ Mark Done"}</button></div>
       </div><div class="mtime">${fTime(m.timestamp)}</div></div>`;
   }
+  if(m.type==="reminder_alert"){
+    const r=reminders[m.content]||{};
+    return `<div class="mw in">
+      <div class="bubble ai" style="border-left:4px solid #E8C84A;background:#FFFBF0;">
+        <div class="ai-tag" style="color:#7A5A00;">⏰ Reminder Due Now</div>
+        <div style="font-weight:700;font-size:15px;color:#1B2E4B;margin-bottom:4px;">${esc(r.title||"Reminder")}</div>
+        ${r.note?`<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">${esc(r.note)}</div>`:""}
+        <div class="rem-actions">
+          <button class="rem-btn${r.done?" done-btn":""}" onclick="${r.done?"":"markDone('"+r.id+"')"}">${r.done?"✓ Already done":"✓ Mark Done"}</button>
+        </div>
+      </div>
+      <div class="mtime">${fTime(m.timestamp)}</div>
+    </div>`;
+  }
   if(m.type==="ai")return`<div class="mw in"><div class="bubble ai"><div class="ai-tag">AI Assistant</div><div>${esc(m.content)}</div></div><div class="mtime">${fTime(m.timestamp)}</div></div>`;
   if(m.type==="note")return`<div class="mw out"><div class="bubble note">${esc(m.content)}</div><div class="mtime">${fTime(m.timestamp)}</div></div>`;
   if(m.type==="question")return`<div class="mw out"><div class="bubble question">${esc(m.content)}</div><div class="mtime">${fTime(m.timestamp)}</div></div>`;
@@ -617,24 +718,76 @@ function appendMsg(m){
   body.scrollTop=body.scrollHeight;
 }
 
-// ── SEND ──────────────────────────────────────────────────────────────────────
-const REM_SYS=`You are a reminder parser for a real estate CRM. Determine if the user message is requesting a reminder.
-If YES, return ONLY this JSON (no markdown): {"isReminder":true,"title":"...","dueDate":"...","dueTime":"...","note":"..."}
-If NO, return ONLY: {"isReminder":false}
-dueDate: natural language (Saturday, Monday, Tomorrow, June 10). dueTime: "9:00 AM" format or "". Title: concise action. Extra context in note.`;
+// ── LOCAL REMINDER PARSER (no API needed) ────────────────────────────────────
+function parseReminder(text){
+  const t = text.toLowerCase();
+  // detect trigger words
+  const triggers = ["remind me","reminder","set a reminder","don't forget","dont forget","remember to","follow up","follow-up","send email","email to","send an email","enviar correo","correo a","llamar","recordar","recordatorio"];
+  const isReminder = triggers.some(tr => t.includes(tr));
+  if(!isReminder) return {isReminder:false};
 
+  // extract time — match patterns like 9am, 9:30am, 9:00 AM, 3pm, 3:30 PM
+  let dueTime = "";
+  const timeMatch = text.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|AM|PM)\b/i);
+  if(timeMatch){
+    let h = parseInt(timeMatch[1]);
+    const m = timeMatch[2] ? timeMatch[2] : "00";
+    const ampm = timeMatch[3].toUpperCase();
+    dueTime = `${h}:${m} ${ampm}`;
+  }
+
+  // extract date — days of week, relative words, specific dates
+  let dueDate = "";
+  const days = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday",
+                "lunes","martes","miércoles","miercoles","jueves","viernes","sábado","sabado","domingo"];
+  const dayFound = days.find(d => t.includes(d));
+  if(dayFound){
+    dueDate = dayFound.charAt(0).toUpperCase() + dayFound.slice(1);
+  } else if(t.includes("tomorrow") || t.includes("mañana")){
+    dueDate = "Tomorrow";
+  } else if(t.includes("today") || t.includes("hoy")){
+    dueDate = "Today";
+  } else if(t.includes("next week") || t.includes("próxima semana")){
+    dueDate = "Next week";
+  } else {
+    // try to find a date like "June 10", "10 June", "6/10"
+    const dateMatch = text.match(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2}\b/i)
+      || text.match(/\b\d{1,2}[\/-]\d{1,2}\b/);
+    if(dateMatch) dueDate = dateMatch[0];
+  }
+
+  // build title — strip trigger phrase and time/date noise to get the action
+  let title = text
+    .replace(/remind me to?/i,"").replace(/set a reminder to?/i,"").replace(/reminder to?/i,"")
+    .replace(/don'?t forget to?/i,"").replace(/remember to?/i,"")
+    .replace(/follow[\s-]?up/i,"Follow up")
+    .replace(/send an? email to?/i,"Email").replace(/email to/i,"Email")
+    .replace(/enviar correo a?/i,"Correo").replace(/correo a/i,"Correo")
+    .replace(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i,"")
+    .replace(/\b(at|on|by|this|next)\b/gi,"")
+    .replace(new RegExp(days.join("|"),"gi"),"")
+    .replace(/tomorrow|today|mañana|hoy/gi,"")
+    .replace(/\s{2,}/g," ").trim();
+
+  if(!title) title = "Reminder";
+  // capitalize first letter
+  title = title.charAt(0).toUpperCase() + title.slice(1);
+  // strip trailing punctuation
+  title = title.replace(/[,.:]+$/,"").trim();
+
+  return {isReminder:true, title, dueDate, dueTime, note:""};
+}
+
+// ── SEND ──────────────────────────────────────────────────────────────────────
 async function sendMessage(){
   const inp=document.getElementById("msgInput"),text=inp.value.trim();
   if(!text||!selectedId||isLoading)return;
   inp.value="";autoResize(inp);
   if(inputMode==="note"){
-    setLoading(true);
-    let parsed={isReminder:false};
-    try{const raw=await callClaude(REM_SYS,text,200);parsed=JSON.parse(raw.replace(/```json|```/g,"").trim());}catch(e){}
-    setLoading(false);
+    const parsed = parseReminder(text);
     if(parsed.isReminder){
       const rid="r_"+Date.now();
-      reminders[rid]={id:rid,clientId:selectedId,title:parsed.title,dueDate:parsed.dueDate,dueTime:parsed.dueTime,note:parsed.note||"",done:false,createdAt:new Date().toISOString()};
+      reminders[rid]={id:rid,clientId:selectedId,title:parsed.title,dueDate:parsed.dueDate||"",dueTime:parsed.dueTime||"",note:parsed.note||"",done:false,createdAt:new Date().toISOString()};
       const msg={id:"m_"+Date.now(),clientId:selectedId,type:"reminder",content:rid,timestamp:new Date().toISOString()};
       if(!messages[selectedId])messages[selectedId]=[];
       messages[selectedId].push(msg);appendMsg(msg);updateRemBtn();renderClientList();showToast("⏰ Reminder set");
