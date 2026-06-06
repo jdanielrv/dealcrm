@@ -446,12 +446,21 @@ async function doLogout() {
   showLogin();
 }
 
-  // App initialization — called after login
-  renderFilters();
-  renderClientList();
-  initSwipe();
-  startReminderChecker();
-  checkReminders();
+function initApp() {
+  try {
+    renderFilters();
+    renderClientList();
+    initSwipe();
+    startReminderChecker();
+    checkReminders();
+  } catch(e) {
+    console.error('initApp error:', e);
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('loginError').textContent = 'Error al cargar: ' + e.message;
+    document.getElementById('loginBtn').disabled = false;
+    document.getElementById('loginBtn').textContent = 'Sign In';
+  }
 }
 </script>
 
